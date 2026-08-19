@@ -193,3 +193,24 @@ html.light {
 .stagger-in > *:nth-child(6) {
   animation-delay: 240ms;
 }
+
+@media print {
+  header,
+  nav,
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .rounded-xl {
+    break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+}
