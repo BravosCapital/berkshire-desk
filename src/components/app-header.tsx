@@ -96,19 +96,11 @@ export function AppHeader({
               </Button>
             </>
           ) : null}
-          {isPending ? (
-            <div className="size-8 animate-pulse rounded-full bg-surface-2" />
-          ) : user ? (
+          {isPending ? null : user ? (
             <SignedIn>
               <UserButton />
             </SignedIn>
-          ) : (
-            <SignedOut>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/login">Sign in</Link>
-              </Button>
-            </SignedOut>
-          )}
+          ) : null}
         </div>
       </div>
       <nav
