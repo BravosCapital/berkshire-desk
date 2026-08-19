@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Analytics } from "@vercel/analytics/react";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -110,6 +111,7 @@ function RootDocument() {
             </ThemeProvider>
           </AuthProvider>
         </QueryClientProvider>
+        <Analytics />
         <Scripts />
       </body>
     </html>
