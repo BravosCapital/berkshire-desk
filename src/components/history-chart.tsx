@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -9,18 +10,36 @@ import {
   YAxis,
 } from "recharts";
 import { IV_HISTORY, withLiveIv } from "@/lib/valuation/history";
+import { loadSnapshots } from "@/lib/valuation/snapshots";
 import { formatPerB } from "@/lib/valuation/format";
 
 export function HistoryChart({ ivPerB, priceB }: { ivPerB: number; priceB: number }) {
-  const data = withLiveIv(IV_HISTORY, ivPerB, priceB);
+  const data = useMemo(() => {
+    const quarterly = withLiveIv(IV_HISTORY, ivPerB, priceB);
+    const daily = loadSnapshots();
+    if (!daily.length) return quarterly;
+    const dailyPoints = daily.map((p) => ({
+      date: p.date,
+      label: p.date.slice(5),
+      priceB: p.priceB,
+      ivPerB: p.ivPerB,
+      cashB: p.cashB,
+      premiumPct: p.premiumPct,
+      note: "daily" as const,
+    }));
+    const lastQuarterly = quarterly[quarterly.length - 1]?.date ?? "";
+    const extra = dailyPoints.filter((p) => p.date > lastQuarterly);
+    if (!extra.length) return quarterly;
+    return [...quarterly.filter((p) => p.note !== "live"), ...extra];
+  }, [ivPerB, priceB]);
 
   return (
     <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
       <h2 className="font-display text-lg font-medium tracking-tight">IV vs market price</h2>
       <p className="text-sm text-muted">
         Two-column intrinsic value per BRK.B at a constant 15× pretax / 8× underwriting policy,
-        against the Class B close. History before Q2 2026 is reconstructed so the series is
-        comparable to the live estimate.
+        against the Class B close. History before Q2 2026 is reconstructed. Daily points are
+        recorded in this browser once the desk is open.
       </p>
       <div className="mt-4 h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
