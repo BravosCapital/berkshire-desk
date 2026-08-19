@@ -19,6 +19,30 @@ Insurance float, deferred tax, and railroad/utility debt are **not** subtracted.
 
 See `/data` in the app for the live ledger of auto vs seeded inputs.
 
+## Deploy live (Vercel)
+
+The app is already wired for Vercel (Nitro `vercel` preset). This sandbox cannot log into your Vercel account — you import the GitHub repo once, then every push to `main` ships.
+
+1. Open **[vercel.com/new](https://vercel.com/new)** and sign in with GitHub (`BravosCapital`).
+2. Import **[BravosCapital/berkshire-desk](https://github.com/BravosCapital/berkshire-desk)**.
+3. Leave the defaults:
+   - Framework: Other
+   - Build command: `npm run build`
+   - Install command: `npm ci`
+   - Node: 22
+4. Optional environment variables (Project → Settings → Environment Variables):
+
+   | Name | Required | Purpose |
+   |---|---|---|
+   | `EDGAR_USER_AGENT` | recommended | SEC requires a contact. Example: `BerkshireDesk/1.0 you@email.com` |
+   | `DATABASE_URL` | no | Neon Postgres if you want the filings cache to persist across cold starts. Without it, PGLite + seed fallback still works. |
+   | `BETTER_AUTH_SECRET` | no | Only if you turn on sign-in. The desk is public without it. |
+
+5. Click **Deploy**. First build takes ~2 minutes. You get a URL like `https://berkshire-desk.vercel.app`.
+6. Custom domain: Project → Settings → Domains → add `desk.yourdomain.com` (or similar) and set the DNS record Vercel shows.
+
+After that, pushing to `main` auto-deploys. No extra CLI step.
+
 ## Run locally
 
 ```bash
@@ -48,4 +72,4 @@ Rare manual seeds (in `src/lib/valuation/`):
 
 ## Stack
 
-TanStack Start, React 19, Tailwind v4, Recharts, Zustand, Better Auth.
+TanStack Start, React 19, Tailwind v4, Recharts, Zustand, Better Auth. Deploy target: Vercel.

@@ -1,6 +1,8 @@
 const CIK = "0001067983";
 const CIK_NUM = "1067983";
-const UA = "BerkshireDesk/1.0 research@example.com";
+const UA =
+  (typeof process !== "undefined" && process.env.EDGAR_USER_AGENT?.trim()) ||
+  "BerkshireDesk/1.0 (https://github.com/BravosCapital/berkshire-desk; research@example.com)";
 const BASE_SUB = `https://data.sec.gov/submissions/CIK${CIK}.json`;
 const ARCH = `https://www.sec.gov/Archives/edgar/data/${CIK_NUM}`;
 
