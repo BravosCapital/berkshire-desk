@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { HoldingsTable } from "@/components/holdings-table";
+import { ThirteenFChanges } from "@/components/thirteenf-changes";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { formatBillions, formatDateLabel, formatPct } from "@/lib/valuation/format";
 import { FILING } from "@/lib/valuation/quarterly";
@@ -9,6 +11,10 @@ export function EquitiesPage() {
   const us = v.holdings.filter((h) => h.source === "13F");
   const top = v.holdings[0];
   const snapPeriod = filings.data?.thirteenF?.periodEnd ?? FILING.thirteenFPeriod;
+
+  useEffect(() => {
+    document.title = `Equities · Berkshire Desk`;
+  }, []);
 
   return (
     <AppShell>
@@ -35,6 +41,7 @@ export function EquitiesPage() {
           />
         </div>
 
+        <ThirteenFChanges holdings={v.holdings} />
         <HoldingsTable holdings={v.holdings} />
       </main>
     </AppShell>
