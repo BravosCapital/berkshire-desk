@@ -18,6 +18,10 @@ type TrackerState = {
   setMode: (m: OpsMode) => void;
   segment: SegmentMultiples;
   setSegment: (key: keyof SegmentMultiples, value: number) => void;
+  cashBuybackB: number;
+  setCashBuybackB: (n: number) => void;
+  cashEquitiesB: number;
+  setCashEquitiesB: (n: number) => void;
   methodologyOpen: boolean;
   setMethodologyOpen: (open: boolean) => void;
   theme: Theme;
@@ -37,6 +41,10 @@ export const useTrackerStore = create<TrackerState>()(
       segment: { ...SEGMENT_DEFAULTS },
       setSegment: (key, value) =>
         set((s) => ({ segment: { ...s.segment, [key]: value } })),
+      cashBuybackB: 0,
+      setCashBuybackB: (n) => set({ cashBuybackB: Math.max(0, n) }),
+      cashEquitiesB: 0,
+      setCashEquitiesB: (n) => set({ cashEquitiesB: Math.max(0, n) }),
       methodologyOpen: false,
       setMethodologyOpen: (methodologyOpen) => set({ methodologyOpen }),
       theme: "dark" as Theme,
@@ -67,6 +75,8 @@ export const useTrackerStore = create<TrackerState>()(
         insuranceMultiple: s.insuranceMultiple,
         mode: s.mode,
         segment: s.segment,
+        cashBuybackB: s.cashBuybackB,
+        cashEquitiesB: s.cashEquitiesB,
       }),
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<TrackerState>;
