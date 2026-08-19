@@ -1,11 +1,14 @@
+import { useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { HeroPanel } from "@/components/hero-panel";
 import { BreakdownPanel } from "@/components/breakdown-panel";
 import { HoldingsTable } from "@/components/holdings-table";
 import { HistoryChart } from "@/components/history-chart";
+import { AnalystTools } from "@/components/analyst-tools";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { FILING, DEFAULT_MULTIPLE } from "@/lib/valuation/quarterly";
 import { formatBillions, formatDateLabel, formatPerB, formatPct } from "@/lib/valuation/format";
+import { recordSnapshot } from "@/lib/valuation/snapshots";
 import { Link } from "@tanstack/react-router";
 import type { DeskSnapshot } from "@/lib/filings/types";
 
@@ -13,10 +16,27 @@ export function TrackerPage() {
   const { v, query, filings } = useLiveValuation();
   const snap = filings.data;
 
+  useEffect(() => {
+    const disc = formatPct(v.premiumB).replace("+", "");
+    document.title = `BRK.B ${formatPerB(v.priceB)} · IV ${formatPerB(v.ivPerB)} · ${disc} · Berkshire Desk`;
+  }, [v.priceB, v.ivPerB, v.premiumB]);
+
+  useEffect(() => {
+    if (!v.ivPerB || !v.priceB) return;
+    recordSnapshot({
+      priceB: v.priceB,
+      ivPerB: v.ivPerB,
+      cashB: v.cashPreferred / 1e9,
+      premiumPct: v.premiumB,
+      marketCapB: v.marketCap / 1e9,
+      publicB: v.publicTotal / 1e9,
+    });
+  }, [v.ivPerB, v.priceB, v.cashPreferred, v.premiumB, v.marketCap, v.publicTotal]);
+
   return (
     <AppShell>
-      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
-        <div>
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none">
+        <div className="print:hidden">
           <h1 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
             Berkshire Hathaway
           </h1>
@@ -26,6 +46,13 @@ export function TrackerPage() {
             Press{" "}
             <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-kicker">M</kbd> for
             methodology.
+          </p>
+        </div>
+        <div className="hidden print:block">
+          <h1 className="font-display text-2xl font-medium">Berkshire Desk — one-pager</h1>
+          <p className="text-sm text-muted">
+            IV {formatPerB(v.ivPerB)} / B · Market {formatPerB(v.priceB)} ·{" "}
+            {formatPct(v.premiumB)} · Printed {new Date().toISOString().slice(0, 10)}
           </p>
         </div>
         <HeroPanel v={v} />
@@ -46,10 +73,7 @@ export function TrackerPage() {
           <aside className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
             <h2 className="font-display text-lg font-medium tracking-tight">Vintage</h2>
             <dl className="mt-4 space-y-3 text-sm">
-              <Row
-                k="Public prices"
-                v={v.live ? "Live · Yahoo Finance" : "Fallback marks"}
-              />
+              <Row k="Public prices" v={v.live ? "Live · Yahoo / Stooq" : "Fallback marks"} />
               <Row
                 k="13F share counts"
                 v={
@@ -80,7 +104,7 @@ export function TrackerPage() {
                 Live feed unavailable. Showing last seeded prices. Refresh to retry.
               </p>
             ) : null}
-            <div className="mt-6 flex flex-wrap gap-3 text-sm">
+            <div className="mt-6 flex flex-wrap gap-3 text-sm print:hidden">
               <Link to="/businesses" className="text-fg underline-offset-2 hover:underline">
                 Private businesses →
               </Link>
@@ -90,11 +114,23 @@ export function TrackerPage() {
               <Link to="/data" className="text-fg underline-offset-2 hover:underline">
                 Data ledger →
               </Link>
+              <button
+                type="button"
+                className="text-fg underline-offset-2 hover:underline"
+                onClick={() => window.print()}
+              >
+                Print one-pager
+              </button>
             </div>
           </aside>
         </div>
-        <HoldingsTable holdings={v.holdings} />
-        <HistoryChart ivPerB={v.ivPerB} priceB={v.priceB} />
+        <AnalystTools v={v} />
+        <div className="print:hidden">
+          <HoldingsTable holdings={v.holdings} />
+          <div className="mt-6">
+            <HistoryChart ivPerB={v.ivPerB} priceB={v.priceB} />
+          </div>
+        </div>
       </main>
     </AppShell>
   );
