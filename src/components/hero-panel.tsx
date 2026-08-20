@@ -5,6 +5,7 @@ import { Hint } from "@/components/ui/tooltip";
 import type { Valuation } from "@/lib/valuation/compute";
 import { computeImpliedMultiple } from "@/lib/valuation/scenarios";
 import { formatMultiple, formatPerA, formatPerB, formatPct } from "@/lib/valuation/format";
+import { quoteModeLabel, type QuoteHealth } from "@/lib/data-health";
 import { Info } from "lucide-react";
 
 function Gauge({ premium }: { premium: number }) {
@@ -69,12 +70,13 @@ function Gauge({ premium }: { premium: number }) {
   );
 }
 
-export function HeroPanel({ v }: { v: Valuation }) {
+export function HeroPanel({ v, quoteHealth }: { v: Valuation; quoteHealth?: QuoteHealth }) {
   const premium = v.premiumB;
   const tone = premium <= 0 ? "gain" : premium < 0.1 ? "warn" : "loss";
   const label = premium <= 0 ? "trading below estimate" : "trading above estimate";
   const pxChg = v.prevPriceB ? (v.priceB - v.prevPriceB) / v.prevPriceB : 0;
   const implied = useMemo(() => computeImpliedMultiple(v), [v]);
+  const mode = quoteHealth?.mode ?? (v.live ? "live" : "seed");
 
   return (
     <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-7">
@@ -85,7 +87,17 @@ export function HeroPanel({ v }: { v: Valuation }) {
             <Info className="size-3.5" />
           </button>
         </Hint>
-        {v.live ? <Badge>Live marks</Badge> : <Badge tone="warn">Fallback prices</Badge>}
+        {mode === "live" ? (
+          <Badge>Live marks</Badge>
+        ) : mode === "partial" ? (
+          <Badge tone="warn">
+            Partial · {quoteHealth?.liveCount}/{quoteHealth?.requested}
+          </Badge>
+        ) : (
+          <Badge tone="warn">
+            Seeded · {quoteHealth?.fallbackAsOf ?? "see Sources"}
+          </Badge>
+        )}
       </div>
 
       <div className="mt-4 grid items-end gap-8 lg:grid-cols-[1fr_auto]">
@@ -95,9 +107,7 @@ export function HeroPanel({ v }: { v: Valuation }) {
             format={formatPerB}
             className="font-mono text-display font-medium tabular tracking-tight text-fg"
           />
-          <p className="mt-1 text-sm text-muted">
-            Estimated intrinsic value per Class B share
-          </p>
+          <p className="mt-1 text-sm text-muted">Estimated intrinsic value per Class B share</p>
 
           <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
             <div>
@@ -123,6 +133,14 @@ export function HeroPanel({ v }: { v: Valuation }) {
             </Badge>
             <span className="text-sm text-muted">{label}</span>
           </div>
+
+          {mode !== "live" ? (
+            <p className="mt-3 text-xs text-warn">
+              {quoteModeLabel(mode)}. Portfolio values and IV use{" "}
+              {mode === "seed" ? "seeded" : "mixed live/seeded"} marks
+              {quoteHealth?.fallbackAsOf ? ` (seed table ${quoteHealth.fallbackAsOf})` : ""}.
+            </p>
+          ) : null}
 
           {implied.impliedMultiple !== null ? (
             <p className="mt-3 text-xs text-muted">
