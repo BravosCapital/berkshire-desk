@@ -40,9 +40,49 @@ const LETTERS = [
   },
 ] as const;
 
+const FAQS = [
+  {
+    q: "What is Berkshire Desk?",
+    a: "Berkshire Desk is an independent two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). It applies ideas from Warren Buffett’s shareholder letters to a live owner’s view of public equities, cash, operating businesses and insurance float. It is not affiliated with Berkshire Hathaway Inc. and is not investment advice.",
+  },
+  {
+    q: "How is Berkshire Hathaway’s intrinsic value estimated?",
+    a: "Intrinsic value is estimated as the sum of two columns: investments at market (cash, T-bills, public equities, Japan trading houses and other holdings) plus the equity value of wholly-owned operating businesses (capitalized pretax earnings) and the insurance underwriting franchise, less parent-level bonds only.",
+  },
+  {
+    q: "Why isn’t insurance float deducted from intrinsic value?",
+    a: "Insurance float appears as a liability on the balance sheet. When underwriting is profitable or break-even, that float is cost-free or better — revolving capital that can be invested for shareholders. Deducting it in full from intrinsic value double-counts the capital structure. Float and deferred tax already fund or sit inside the two columns.",
+  },
+  {
+    q: "Should I look at GAAP earnings or operating earnings?",
+    a: "Mark-to-market swings in the equity portfolio create large, volatile GAAP earnings. Buffett has repeatedly asked shareholders to focus on operating earnings — the real economic progress of the businesses — and to ignore the accounting volatility of unrealized gains and losses.",
+  },
+  {
+    q: "Where can I read Warren Buffett’s shareholder letters?",
+    a: "Every annual letter from 1977 onward, plus the Owner’s Manual, is published on Berkshire Hathaway’s website. The letters remain the primary source; this desk is a living application of those ideas.",
+  },
+] as const;
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.a,
+    },
+  })),
+};
+
 export function MethodologyPage() {
   return (
     <AppShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+      />
       <main className="mx-auto max-w-3xl space-y-10 px-4 py-6 sm:px-6 sm:py-10">
         <div>
           <p className="text-kicker uppercase text-faint">Philosophy</p>
@@ -148,6 +188,23 @@ export function MethodologyPage() {
               2025 letter
               <ExternalLink className="size-3.5" />
             </a>
+          </div>
+        </section>
+
+        <section className="space-y-6">
+          <h2 className="font-display text-xl font-medium tracking-tight">FAQ</h2>
+          <div className="space-y-4">
+            {FAQS.map((item) => (
+              <article
+                key={item.q}
+                className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6"
+              >
+                <h3 className="font-display text-base font-medium tracking-tight text-fg">
+                  {item.q}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{item.a}</p>
+              </article>
+            ))}
           </div>
         </section>
 
