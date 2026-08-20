@@ -25,9 +25,14 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
         accessorKey: "ticker",
         header: "Ticker",
         cell: ({ row }) => (
-          <div>
-            <div className="font-medium">{row.original.ticker}</div>
+          <div className="min-w-[9rem]">
+            <div className="font-medium text-fg">{row.original.ticker}</div>
             <div className="text-kicker text-muted">{row.original.name}</div>
+            {row.original.ownershipPct != null ? (
+              <div className="mt-0.5 text-kicker text-faint">
+                {row.original.ownershipPct.toFixed(1)}% of company
+              </div>
+            ) : null}
           </div>
         ),
       },
@@ -50,32 +55,34 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
       },
       {
         accessorKey: "shares",
-        header: "Shares",
+        header: () => <span className="block w-full text-right">Shares</span>,
         cell: ({ row }) => (
-          <span className="font-mono tabular">
+          <span className="block text-right font-mono tabular">
             {formatShares(row.original.shares)}
-            {row.original.ownershipPct != null ? (
-              <span className="ml-1 text-faint">{row.original.ownershipPct.toFixed(1)}%</span>
-            ) : null}
           </span>
         ),
       },
       {
         accessorKey: "price",
-        header: "Price",
+        header: () => <span className="block w-full text-right">Price</span>,
         cell: ({ row }) => (
-          <span className="font-mono tabular">
+          <span className="block text-right font-mono tabular">
             {formatPrice(row.original.price, row.original.currency)}
           </span>
         ),
       },
       {
         accessorKey: "changePct",
-        header: "Day",
+        header: () => <span className="block w-full text-right">Day</span>,
         cell: ({ row }) => {
           const n = row.original.changePct;
           return (
-            <span className={cn("font-mono tabular", n > 0 ? "text-gain" : n < 0 ? "text-loss" : "text-muted")}>
+            <span
+              className={cn(
+                "block text-right font-mono tabular",
+                n > 0 ? "text-gain" : n < 0 ? "text-loss" : "text-muted",
+              )}
+            >
               {formatPct(n)}
             </span>
           );
@@ -83,16 +90,20 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
       },
       {
         accessorKey: "value",
-        header: "Value",
+        header: () => <span className="block w-full text-right">Value</span>,
         cell: ({ getValue }) => (
-          <span className="font-mono tabular">{formatBillions(Number(getValue()))}</span>
+          <span className="block text-right font-mono tabular">
+            {formatBillions(Number(getValue()))}
+          </span>
         ),
       },
       {
         accessorKey: "weight",
-        header: "Wt",
+        header: () => <span className="block w-full text-right">Wt</span>,
         cell: ({ getValue }) => (
-          <span className="font-mono tabular text-muted">{(Number(getValue()) * 100).toFixed(1)}%</span>
+          <span className="block text-right font-mono tabular text-muted">
+            {(Number(getValue()) * 100).toFixed(1)}%
+          </span>
         ),
       },
     ],
@@ -126,8 +137,8 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
         <div>
           <h2 className="font-display text-lg font-medium tracking-tight">Equity portfolio</h2>
           <p className="text-sm text-muted">
-            Share counts from the latest 13F (auto-pulled from EDGAR) · Japanese stakes from
-            ownership filings · live prices where the feed answered
+            13F share counts from EDGAR · Japan stakes from ownership filings · live marks where
+            available
           </p>
         </div>
         <div className="relative w-full sm:w-64">
@@ -143,23 +154,23 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
+        <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
             {table.getHeaderGroups().map((hg) => (
               <tr key={hg.id} className="border-b border-border text-kicker uppercase text-faint">
                 {hg.headers.map((header) => (
-                  <th key={header.id} className="px-2 py-2 font-medium">
+                  <th key={header.id} className="px-2 py-2.5 font-medium">
                     {header.isPlaceholder ? null : (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1"
+                        className="inline-flex w-full items-center gap-1"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() === "asc" ? (
-                          <ArrowUp className="size-3" />
+                          <ArrowUp className="size-3 shrink-0" />
                         ) : header.column.getIsSorted() === "desc" ? (
-                          <ArrowDown className="size-3" />
+                          <ArrowDown className="size-3 shrink-0" />
                         ) : null}
                       </button>
                     )}
