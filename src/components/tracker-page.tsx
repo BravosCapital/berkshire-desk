@@ -5,16 +5,29 @@ import { BreakdownPanel } from "@/components/breakdown-panel";
 import { HoldingsTable } from "@/components/holdings-table";
 import { HistoryChart } from "@/components/history-chart";
 import { AnalystTools } from "@/components/analyst-tools";
+import { TwoColumnExplainer } from "@/components/two-column-explainer";
 import { useLiveValuation } from "@/lib/use-valuation";
-import { FILING, DEFAULT_MULTIPLE } from "@/lib/valuation/quarterly";
+import { useTrackerStore } from "@/lib/store";
+import { FILING, DEFAULT_MULTIPLE, DEFAULT_INSURANCE_MULTIPLE } from "@/lib/valuation/quarterly";
 import { formatBillions, formatDateLabel, formatPerB, formatPct } from "@/lib/valuation/format";
 import { recordSnapshot } from "@/lib/valuation/snapshots";
 import { Link } from "@tanstack/react-router";
 import type { DeskSnapshot } from "@/lib/filings/types";
+import { cn } from "@/lib/utils";
+
+const PRESETS = [
+  { id: "conservative", label: "Conservative", multiple: 12, insurance: 6 },
+  { id: "base", label: "Base", multiple: DEFAULT_MULTIPLE, insurance: DEFAULT_INSURANCE_MULTIPLE },
+  { id: "optimistic", label: "Optimistic", multiple: 18, insurance: 10 },
+] as const;
 
 export function TrackerPage() {
   const { v, query, filings } = useLiveValuation();
   const snap = filings.data;
+  const multiple = useTrackerStore((s) => s.multiple);
+  const insuranceMultiple = useTrackerStore((s) => s.insuranceMultiple);
+  const setMultiple = useTrackerStore((s) => s.setMultiple);
+  const setInsuranceMultiple = useTrackerStore((s) => s.setInsuranceMultiple);
 
   useEffect(() => {
     const disc = formatPct(v.premiumB).replace("+", "");
@@ -33,29 +46,69 @@ export function TrackerPage() {
     });
   }, [v.ivPerB, v.priceB, v.cashPreferred, v.premiumB, v.marketCap, v.publicTotal]);
 
+  function applyPreset(p: (typeof PRESETS)[number]) {
+    setMultiple(p.multiple);
+    setInsuranceMultiple(p.insurance);
+  }
+
+  const activePreset = PRESETS.find(
+    (p) => p.multiple === multiple && p.insurance === insuranceMultiple,
+  );
+
   return (
     <AppShell>
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none">
         <div className="print:hidden">
-          <h1 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">
+          <p className="text-kicker uppercase text-faint">Owner’s dashboard</p>
+          <h1 className="mt-1 font-display text-3xl font-medium tracking-tight sm:text-4xl">
             Berkshire Hathaway
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted">
-            A live two-column estimate of intrinsic value. Default {DEFAULT_MULTIPLE}× pretax on
-            non-insurance operating earnings, 8× after-tax underwriting, parent bonds deducted.
-            Press{" "}
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+            A live two-column estimate of intrinsic value — investments at market plus the equity
+            value of the wholly-owned businesses, less parent bonds. Float is not deducted. Press{" "}
             <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-kicker">M</kbd> for
-            methodology.
+            Letters & Lessons.
           </p>
         </div>
+
         <div className="hidden print:block">
           <h1 className="font-display text-2xl font-medium">Berkshire Desk — one-pager</h1>
           <p className="text-sm text-muted">
             IV {formatPerB(v.ivPerB)} / B · Market {formatPerB(v.priceB)} ·{" "}
             {formatPct(v.premiumB)} · Printed {new Date().toISOString().slice(0, 10)}
           </p>
+          <p className="mt-1 text-xs text-muted">
+            Two-column SOTP · {multiple}× pretax ops · {insuranceMultiple}× underwriting · parent
+            bonds deducted · float not deducted
+          </p>
         </div>
+
+        <TwoColumnExplainer />
         <HeroPanel v={v} />
+
+        {/* Scenario presets */}
+        <div className="flex flex-wrap items-center gap-2 print:hidden">
+          <span className="text-kicker uppercase text-faint">Scenario</span>
+          {PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => applyPreset(p)}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm transition-colors",
+                activePreset?.id === p.id
+                  ? "bg-surface-2 font-medium text-fg shadow-[var(--shadow-border)]"
+                  : "text-muted hover:bg-surface-2/70 hover:text-fg",
+              )}
+            >
+              {p.label}
+              <span className="ml-1.5 font-mono text-kicker tabular text-faint">
+                {p.multiple}× / {p.insurance}×
+              </span>
+            </button>
+          ))}
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-3">
           {[
             ["IV at 10×", formatPerB(v.ivPerBAt10)],
@@ -68,6 +121,7 @@ export function TrackerPage() {
             </div>
           ))}
         </div>
+
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <BreakdownPanel v={v} />
           <aside className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
@@ -111,8 +165,8 @@ export function TrackerPage() {
               <Link to="/charts" className="text-fg underline-offset-2 hover:underline">
                 Charts →
               </Link>
-              <Link to="/data" className="text-fg underline-offset-2 hover:underline">
-                Data ledger →
+              <Link to="/methodology" className="text-fg underline-offset-2 hover:underline">
+                Letters & Lessons →
               </Link>
               <button
                 type="button"
@@ -124,7 +178,9 @@ export function TrackerPage() {
             </div>
           </aside>
         </div>
+
         <AnalystTools v={v} />
+
         <div className="print:hidden">
           <HoldingsTable holdings={v.holdings} />
           <div className="mt-6">
