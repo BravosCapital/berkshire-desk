@@ -34,9 +34,12 @@ export function AnalystTools({ v }: { v: Valuation }) {
     });
   }, [v]);
 
+  const spread =
+    implied.impliedMultiple !== null ? implied.impliedMultiple - v.multiple : null;
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-2">
         <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
           <h2 className="font-display text-lg font-medium tracking-tight">Implied operating multiple</h2>
           <p className="mt-1 text-sm text-muted">
@@ -50,7 +53,38 @@ export function AnalystTools({ v }: { v: Valuation }) {
             <Row k="Residual ops value" v={formatBillions(implied.residualOpsValue)} />
             <Row k="Pretax run-rate" v={formatBillions(implied.pretaxRunRate)} />
             <Row k="Desk multiple" v={formatMultiple(v.multiple)} />
+            <Row
+              k="Spread vs desk"
+              v={
+                spread === null
+                  ? "—"
+                  : `${spread > 0 ? "+" : ""}${spread.toFixed(1)}×`
+              }
+            />
+            <Row
+              k="Residual / IV"
+              v={formatPct(implied.residualShareOfIv)}
+            />
           </dl>
+
+          {implied.impliedMultiple !== null ? (
+            <p className="mt-4 rounded-lg bg-surface-2 px-3 py-3 text-xs leading-relaxed text-muted">
+              {implied.impliedMultiple < v.multiple ? (
+                <>
+                  The market is capitalizing the operating businesses at a lower multiple than the
+                  desk default ({formatMultiple(v.multiple)}). That is the main source of the
+                  current discount.
+                </>
+              ) : implied.impliedMultiple > v.multiple ? (
+                <>
+                  The market is capitalizing the operating businesses above the desk default
+                  ({formatMultiple(v.multiple)}). Most of any premium sits in the ops multiple.
+                </>
+              ) : (
+                <>Market implied multiple is in line with the desk default.</>
+              )}
+            </p>
+          ) : null}
         </section>
 
         <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
