@@ -148,10 +148,11 @@ export function AppHeader({
         </div>
       </div>
 
+      {/* Mobile nav — larger touch targets, stronger active state */}
       <nav className="border-t border-border lg:hidden" aria-label="Sections">
-        <div className="mx-auto flex max-w-7xl gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-2 py-2 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map((item) => (
-            <NavLink key={item.to} item={item} active={pathname === item.to} />
+            <NavLink key={item.to} item={item} active={pathname === item.to} mobile />
           ))}
         </div>
       </nav>
@@ -162,17 +163,24 @@ export function AppHeader({
 function NavLink({
   item,
   active,
+  mobile = false,
 }: {
   item: (typeof NAV)[number];
   active: boolean;
+  mobile?: boolean;
 }) {
   return (
     <Link
       to={item.to}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "shrink-0 rounded-sm px-2.5 py-1.5 text-sm transition-colors",
-        active ? "bg-surface-2 font-medium text-fg" : "text-muted hover:bg-surface-2 hover:text-fg",
+        "shrink-0 rounded-md text-sm transition-colors",
+        mobile
+          ? "px-3 py-2 min-h-[40px] flex items-center"
+          : "px-2.5 py-1.5",
+        active
+          ? "bg-surface-2 font-medium text-fg shadow-[var(--shadow-border)]"
+          : "text-muted hover:bg-surface-2/70 hover:text-fg",
       )}
     >
       {item.label}
