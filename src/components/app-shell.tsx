@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
+import { DataHealthBanner } from "@/components/data-health-banner";
 import { MethodologyDialog } from "@/components/methodology-dialog";
 import { KeyboardHints } from "@/components/keyboard-hints";
 import { useLiveValuation } from "@/lib/use-valuation";
@@ -37,12 +38,12 @@ function writeLastSeen(next: LastSeen) {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { v, query, filings } = useLiveValuation();
+  const { v, query, filings, health, quoteHealth } = useLiveValuation();
   const setMethodologyOpen = useTrackerStore((s) => s.setMethodologyOpen);
   const prevSource = useRef<string | null>(null);
+  const prevQuoteMode = useRef<string | null>(null);
   const hydrated = useRef(false);
 
-  // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
@@ -60,7 +61,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [setMethodologyOpen]);
 
-  // Filing ping: toast when we leave seed, or when a newer filing appears
+  // Filing ping
   useEffect(() => {
     const snap = filings.data;
     if (!snap) return;
@@ -69,7 +70,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     const filed13 = snap.thirteenF?.filed;
     const filed10 = snap.tenQ?.filed;
 
-    // First paint — just record, don't toast
     if (!hydrated.current) {
       hydrated.current = true;
       prevSource.current = source;
@@ -82,14 +82,12 @@ export function AppShell({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Seed → live/cache
     if (prevSource.current === "seed" && (source === "edgar" || source === "cache")) {
       toast("EDGAR filings loaded", {
         description: "13F and 10-Q figures are now live.",
       });
     }
 
-    // Newer filing than last seen in this browser
     const last = readLastSeen();
     const newer13 = filed13 && last.thirteenFFiled && filed13 > last.thirteenFFiled;
     const newer10 = filed10 && last.tenQFiled && filed10 > last.tenQFiled;
@@ -111,24 +109,54 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   }, [filings.data]);
 
+  // Quote degradation toast — never silent
+  useEffect(() => {
+    const mode = quoteHealth.mode;
+    if (prevQuoteMode.current === null) {
+      prevQuoteMode.current = mode;
+      if (mode === "seed") {
+        toast("Market marks are seeded", {
+          description: `Live feed unavailable. Using prices as of ${quoteHealth.fallbackAsOf}.`,
+        });
+      }
+      return;
+    }
+    if (prevQuoteMode.current !== "seed" && mode === "seed") {
+      toast("Live marks dropped", {
+        description: `Fell back to seeded prices as of ${quoteHealth.fallbackAsOf}.`,
+      });
+    }
+    if (prevQuoteMode.current === "seed" && mode === "live") {
+      toast("Live marks restored", {
+        description: "Yahoo / Stooq feed is back.",
+      });
+    }
+    prevQuoteMode.current = mode;
+  }, [quoteHealth.mode, quoteHealth.fallbackAsOf]);
+
   const exportSnapshot = useCallback(() => {
-    downloadSnapshot(v, filings.data ?? null);
+    downloadSnapshot(v, filings.data ?? null, quoteHealth.mode);
     toast("Snapshot exported", { description: "JSON and CSV downloaded." });
-  }, [v, filings.data]);
+  }, [v, filings.data, quoteHealth.mode]);
 
   return (
     <div className="min-h-dvh bg-bg text-fg">
       <a href="#main" className="skip-link">
         Skip to content
       </a>
-      <AppHeader onExport={exportSnapshot} pricesAt={query.data?.fetchedAt ?? null} />
+      <AppHeader
+        onExport={exportSnapshot}
+        pricesAt={query.data?.fetchedAt ?? null}
+        quoteHealth={quoteHealth}
+      />
+      <DataHealthBanner health={health} />
       <div id="main">{children}</div>
       <footer className="mx-auto max-w-7xl space-y-2 border-t border-border px-4 pb-12 pt-6 text-xs text-faint sm:px-6">
         <KeyboardHints />
         <p>{LEGAL_FOOTER}</p>
         <p>
           13F and 10-Q inputs refresh from SEC EDGAR; prices from Yahoo Finance with Stooq
-          fallback.{" "}
+          fallback. Seeded marks are dated and flagged when the live feed fails.{" "}
           <Link to="/legal" className="text-muted underline-offset-2 hover:text-fg hover:underline">
             Full legal notice
           </Link>
@@ -141,9 +169,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function downloadSnapshot(v: Valuation, snap: { thirteenF?: unknown; tenQ?: unknown } | null) {
+function downloadSnapshot(
+  v: Valuation,
+  snap: { thirteenF?: unknown; tenQ?: unknown } | null,
+  quoteMode: string,
+) {
   const snapshot = {
     generatedAt: new Date().toISOString(),
+    quoteMode,
     methodology:
       "Unofficial two-column SOTP estimate only — not investment advice, not affiliated with Berkshire Hathaway Inc. Investments at market + capitalized ops + insurance franchise − parent bonds. See berkshiredesk.com/legal.",
     multiple: v.multiple,
@@ -207,6 +240,7 @@ function downloadSnapshot(v: Valuation, snap: { thirteenF?: unknown; tenQ?: unkn
     `iv_per_b,${v.ivPerB}`,
     `market_per_b,${v.priceB}`,
     `premium,${v.premiumB}`,
+    `quote_mode,${quoteMode}`,
   ];
   const csv = new Blob([csvLines.join("\n")], { type: "text/csv" });
   const stamp = new Date().toISOString().slice(0, 10);
