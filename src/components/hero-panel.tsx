@@ -76,27 +76,25 @@ export function HeroPanel({ v, quoteHealth }: { v: Valuation; quoteHealth?: Quot
   const label = premium <= 0 ? "trading below estimate" : "trading above estimate";
   const pxChg = v.prevPriceB ? (v.priceB - v.prevPriceB) / v.prevPriceB : 0;
   const implied = useMemo(() => computeImpliedMultiple(v), [v]);
-  const mode = quoteHealth?.mode ?? (v.live ? "live" : "seed");
+  const mode = quoteHealth?.mode ?? (v.live ? "daily" : "seed");
 
   return (
     <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-kicker font-medium uppercase text-faint">Unofficial estimate · BRK.B</p>
-        <Hint label="Two-column estimate: investments at market (cash, public equities, bonds, preferreds) plus capitalized after-interest operating earnings plus an insurance underwriting franchise, minus parent-level bonds only. Float, deferred tax, and railroad/utility debt are not deducted — they already fund or sit inside the columns above.">
+        <Hint label="Two-column estimate: investments at market (cash, public equities, bonds, preferreds) plus capitalized after-interest operating earnings plus an insurance underwriting franchise, minus parent-level bonds only. Float, deferred tax, and railroad/utility debt are not deducted — they already fund or sit inside the columns above. Equity marks are daily session closes, not intraday.">
           <button type="button" className="text-faint hover:text-muted" aria-label="What is intrinsic value">
             <Info className="size-3.5" />
           </button>
         </Hint>
-        {mode === "live" ? (
-          <Badge>Live marks</Badge>
+        {mode === "daily" ? (
+          <Badge>Daily · {quoteHealth?.marksAsOf ?? "session"}</Badge>
         ) : mode === "partial" ? (
           <Badge tone="warn">
-            Partial · {quoteHealth?.liveCount}/{quoteHealth?.requested}
+            Partial · {quoteHealth?.dailyCount}/{quoteHealth?.requested}
           </Badge>
         ) : (
-          <Badge tone="warn">
-            Seeded · {quoteHealth?.fallbackAsOf ?? "see Sources"}
-          </Badge>
+          <Badge tone="warn">Seeded · {quoteHealth?.fallbackAsOf ?? "see Sources"}</Badge>
         )}
       </div>
 
@@ -134,13 +132,19 @@ export function HeroPanel({ v, quoteHealth }: { v: Valuation; quoteHealth?: Quot
             <span className="text-sm text-muted">{label}</span>
           </div>
 
-          {mode !== "live" ? (
+          {mode !== "daily" ? (
             <p className="mt-3 text-xs text-warn">
               {quoteModeLabel(mode)}. Portfolio values and IV use{" "}
-              {mode === "seed" ? "seeded" : "mixed live/seeded"} marks
+              {mode === "seed" ? "emergency seed" : "mixed daily/seed"} prices
               {quoteHealth?.fallbackAsOf ? ` (seed table ${quoteHealth.fallbackAsOf})` : ""}.
             </p>
-          ) : null}
+          ) : (
+            <p className="mt-3 text-xs text-muted">
+              Equity marks are the daily session-close set as of{" "}
+              <span className="font-mono tabular text-fg">{quoteHealth?.marksAsOf}</span> — not
+              intraday ticks.
+            </p>
+          )}
 
           {implied.impliedMultiple !== null ? (
             <p className="mt-3 text-xs text-muted">
