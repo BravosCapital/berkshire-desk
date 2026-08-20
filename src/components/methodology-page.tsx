@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Link } from "@tanstack/react-router";
 import { ExternalLink } from "lucide-react";
@@ -42,10 +41,6 @@ const LETTERS = [
 ] as const;
 
 export function MethodologyPage() {
-  useEffect(() => {
-    document.title = "Letters & Lessons · Berkshire Desk";
-  }, []);
-
   return (
     <AppShell>
       <main className="mx-auto max-w-3xl space-y-10 px-4 py-6 sm:px-6 sm:py-10">
