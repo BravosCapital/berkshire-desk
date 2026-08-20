@@ -15,7 +15,7 @@ const DESCRIPTION =
   "Live two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). Owner’s view of public equities, cash, operating businesses, insurance float and capital structure — with analyst tools, charts and lessons from Buffett’s letters. Independent research, not investment advice.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME || "berkshiredesk.com";
 const siteOrigin = `https://${host}`;
-const ogImage = `${siteOrigin}/og.jpg`;
+const ogImage = `${siteOrigin}/og.svg`;
 const xBanner = `https://og.grok.me/v1/banner.png?host=${encodeURIComponent(host)}&title=${encodeURIComponent(APP_NAME)}&color=08090B`;
 
 const jsonLd = {
@@ -70,6 +70,7 @@ export const Route = createRootRoute({
       { property: "og:site_name", content: APP_NAME },
       { property: "og:url", content: siteOrigin },
       { property: "og:image", content: ogImage },
+      { property: "og:image:type", content: "image/svg+xml" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Berkshire Desk — live two-column intrinsic value for BRK.A / BRK.B" },
