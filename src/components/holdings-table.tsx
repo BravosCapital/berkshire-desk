@@ -46,11 +46,11 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
         header: "Marks",
         cell: ({ row }) =>
           row.original.live ? (
-            <Badge tone="gain">Live</Badge>
+            <Badge>Daily</Badge>
           ) : row.original.mapped === false ? (
             <Badge tone="warn">13F value</Badge>
           ) : (
-            <Badge tone="warn">Fallback</Badge>
+            <Badge tone="warn">Seed</Badge>
           ),
       },
       {
@@ -137,8 +137,8 @@ export function HoldingsTable({ holdings }: { holdings: MarkedHolding[] }) {
         <div>
           <h2 className="font-display text-lg font-medium tracking-tight">Equity portfolio</h2>
           <p className="text-sm text-muted">
-            13F share counts from EDGAR · Japan stakes from ownership filings · live marks where
-            available
+            13F share counts from EDGAR · Japan stakes from ownership filings · daily session closes
+            where available
           </p>
         </div>
         <div className="relative w-full sm:w-64">
