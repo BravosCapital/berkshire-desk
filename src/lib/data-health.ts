@@ -1,29 +1,33 @@
 /**
  * Desk data-health model.
  *
- * Silent degradation (stale seed prices looking “fine”) is a product failure.
- * Every consumer of market marks or filings should read this and surface it.
+ * Marks are a daily session-close set, not intraday ticks.
+ * Silent multi-day seed use is a product failure — surface it.
  */
 
 import { FALLBACK_AS_OF } from "@/lib/valuation/holdings";
 
-export type QuoteMode = "live" | "partial" | "seed";
+export type QuoteMode = "daily" | "partial" | "seed";
 
 export type QuoteHealth = {
   mode: QuoteMode;
-  /** Symbols successfully fetched from Yahoo or Stooq */
+  /** Symbols successfully fetched from Yahoo or Stooq daily bars */
+  dailyCount: number;
+  /** @deprecated alias of dailyCount for older UI */
   liveCount: number;
   /** Symbols served from hardcoded FALLBACK_QUOTES */
   fallbackCount: number;
   requested: number;
-  /** liveCount / requested, 0–1 */
+  /** dailyCount / requested, 0–1 */
   coverage: number;
-  source: "yahoo-chart" | "yahoo-quote" | "yahoo+stooq" | "stooq" | "fallback" | "unknown";
+  source: "yahoo-chart" | "yahoo+stooq" | "stooq" | "fallback" | "unknown";
   fetchedAt: string | null;
-  /** Calendar date the seed table was last refreshed */
+  /** Session date of the daily mark book (majority) */
+  marksAsOf: string;
+  /** Calendar date the emergency seed table was last refreshed */
   fallbackAsOf: string;
-  /** True when BRK-B specifically came from a live feed */
-  brkBLive: boolean;
+  /** True when BRK.B came from the daily feed */
+  brkBDaily: boolean;
   failedSymbols: string[];
 };
 
@@ -43,34 +47,39 @@ export type DeskHealth = {
 
 export function buildQuoteHealth(opts: {
   requested: number;
-  liveSymbols: string[];
+  dailySymbols: string[];
   source?: string;
   fetchedAt?: string | null;
   failedSymbols?: string[];
+  marksAsOf?: string;
 }): QuoteHealth {
-  const liveCount = opts.liveSymbols.length;
-  const requested = Math.max(opts.requested, liveCount);
-  const fallbackCount = Math.max(0, requested - liveCount);
-  const coverage = requested > 0 ? liveCount / requested : 0;
-  const brkBLive = opts.liveSymbols.includes("BRK-B");
+  const dailyCount = opts.dailySymbols.length;
+  const requested = Math.max(opts.requested, dailyCount);
+  const fallbackCount = Math.max(0, requested - dailyCount);
+  const coverage = requested > 0 ? dailyCount / requested : 0;
+  const brkBDaily = opts.dailySymbols.includes("BRK-B");
+  const marksAsOf = opts.marksAsOf ?? FALLBACK_AS_OF;
 
   let mode: QuoteMode;
-  if (liveCount === 0) mode = "seed";
-  else if (coverage < 0.85 || !brkBLive) mode = "partial";
-  else mode = "live";
+  if (dailyCount === 0) mode = "seed";
+  else if (coverage < 0.85 || !brkBDaily) mode = "partial";
+  else mode = "daily";
 
-  const source = (opts.source as QuoteHealth["source"]) || (liveCount === 0 ? "fallback" : "unknown");
+  const source =
+    (opts.source as QuoteHealth["source"]) || (dailyCount === 0 ? "fallback" : "unknown");
 
   return {
     mode,
-    liveCount,
+    dailyCount,
+    liveCount: dailyCount,
     fallbackCount,
     requested,
     coverage,
     source,
     fetchedAt: opts.fetchedAt ?? null,
+    marksAsOf,
     fallbackAsOf: FALLBACK_AS_OF,
-    brkBLive,
+    brkBDaily,
     failedSymbols: opts.failedSymbols ?? [],
   };
 }
@@ -79,8 +88,12 @@ export function buildDeskHealth(
   quotes: QuoteHealth,
   filings: FilingHealth,
 ): DeskHealth {
+  const marksStaleDays = daysBetween(quotes.marksAsOf, new Date());
+  const marksTooOld = quotes.mode === "daily" && marksStaleDays > 3;
+
   const degraded =
-    quotes.mode !== "live" ||
+    quotes.mode !== "daily" ||
+    marksTooOld ||
     filings.source === "seed" ||
     Boolean(filings.error) ||
     filings.stale;
@@ -88,12 +101,14 @@ export function buildDeskHealth(
   const parts: string[] = [];
   if (quotes.mode === "seed") {
     parts.push(
-      `Market marks are seeded (as of ${quotes.fallbackAsOf}) — live feed unavailable`,
+      `Using emergency seed prices (table ${quotes.fallbackAsOf}) — daily feed unavailable`,
     );
   } else if (quotes.mode === "partial") {
     parts.push(
-      `Partial marks: ${quotes.liveCount}/${quotes.requested} live · ${quotes.fallbackCount} seeded`,
+      `Partial daily book: ${quotes.dailyCount}/${quotes.requested} · ${quotes.fallbackCount} seeded`,
     );
+  } else if (marksTooOld) {
+    parts.push(`Daily marks are ${marksStaleDays} days old (${quotes.marksAsOf})`);
   }
   if (filings.source === "seed") {
     parts.push("Filings are seeded (EDGAR not yet applied)");
@@ -105,12 +120,22 @@ export function buildDeskHealth(
     quotes,
     filings,
     degraded,
-    summary: parts.join(" · ") || "Live prices and filings",
+    summary:
+      parts.join(" · ") ||
+      `Daily marks as of ${quotes.marksAsOf}`,
   };
 }
 
 export function quoteModeLabel(mode: QuoteMode): string {
-  if (mode === "live") return "Live marks";
+  if (mode === "daily") return "Daily marks";
   if (mode === "partial") return "Partial marks";
   return "Seeded marks";
+}
+
+function daysBetween(isoDate: string, now: Date): number {
+  const [y, m, d] = isoDate.split("-").map(Number);
+  if (!y || !m || !d) return 99;
+  const then = Date.UTC(y, m - 1, d);
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  return Math.max(0, Math.round((today - then) / 86_400_000));
 }
