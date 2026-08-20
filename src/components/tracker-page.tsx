@@ -9,7 +9,7 @@ import { TwoColumnExplainer } from "@/components/two-column-explainer";
 import { VisitDeltaStrip } from "@/components/visit-delta-strip";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { useTrackerStore } from "@/lib/store";
-import { FILING, DEFAULT_MULTIPLE, DEFAULT_INSURANCE_MULTIPLE } from "@/lib/valuation/quarterly";
+import { FILING, DEFAULT_MULTIPLE, DEFAULT_INSURANCE_MULTIPLE, A_PER_B } from "@/lib/valuation/quarterly";
 import { formatBillions, formatDateLabel, formatPerB, formatPct } from "@/lib/valuation/format";
 import { recordSnapshot } from "@/lib/valuation/snapshots";
 import { computePremiumContext } from "@/lib/valuation/premium-context";
@@ -67,7 +67,8 @@ export function TrackerPage() {
   // Rough IV lift if ~$50B of cash is used for buybacks at the live price while at a discount
   const buybackIllustrationB = Math.min(50, v.cashPreferred / 1e9);
   const sharesRetiredIllust = v.priceB > 0 ? (buybackIllustrationB * 1e9) / v.priceB : 0;
-  const bEqAfter = Math.max(0, v.aEquivalent - sharesRetiredIllust);
+  const bEquivalent = v.classA * A_PER_B + v.classB;
+  const bEqAfter = Math.max(0, bEquivalent - sharesRetiredIllust);
   const ivAfterIllust =
     bEqAfter > 0
       ? (v.intrinsicValue - buybackIllustrationB * 1e9) / bEqAfter
