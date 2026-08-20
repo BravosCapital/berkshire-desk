@@ -2,6 +2,7 @@ import { useCallback, useEffect, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { MethodologyDialog } from "@/components/methodology-dialog";
+import { KeyboardHints } from "@/components/keyboard-hints";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { useTrackerStore } from "@/lib/store";
 import type { Valuation } from "@/lib/valuation/compute";
@@ -41,6 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <AppHeader onExport={exportSnapshot} pricesAt={query.data?.fetchedAt ?? null} />
       <div id="main">{children}</div>
       <footer className="mx-auto max-w-7xl space-y-2 border-t border-border px-4 pb-12 pt-6 text-xs text-faint sm:px-6">
+        <KeyboardHints />
         <p>
           Independent research desk. Not affiliated with Berkshire Hathaway Inc. Not investment
           advice. Intrinsic value is an estimate. Two-column SOTP: investments at market plus
