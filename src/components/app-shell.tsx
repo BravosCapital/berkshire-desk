@@ -7,6 +7,8 @@ import { useLiveValuation } from "@/lib/use-valuation";
 import { useTrackerStore } from "@/lib/store";
 import type { Valuation } from "@/lib/valuation/compute";
 import { A_PER_B } from "@/lib/valuation/quarterly";
+import { LEGAL_FOOTER } from "@/lib/legal";
+import { Link } from "@tanstack/react-router";
 
 const LAST_SEEN_KEY = "brk-last-seen-filings";
 
@@ -123,13 +125,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div id="main">{children}</div>
       <footer className="mx-auto max-w-7xl space-y-2 border-t border-border px-4 pb-12 pt-6 text-xs text-faint sm:px-6">
         <KeyboardHints />
+        <p>{LEGAL_FOOTER}</p>
         <p>
-          Independent research desk. Not affiliated with Berkshire Hathaway Inc. Not investment
-          advice. Intrinsic value is an estimate built on the two-column framing from the letters.
-          Float and deferred tax are not deducted. 13F and 10-Q inputs refresh from SEC EDGAR;
-          prices from Yahoo Finance with Stooq fallback.
+          13F and 10-Q inputs refresh from SEC EDGAR; prices from Yahoo Finance with Stooq
+          fallback.{" "}
+          <Link to="/legal" className="text-muted underline-offset-2 hover:text-fg hover:underline">
+            Full legal notice
+          </Link>
+          .
         </p>
-        <p>© {new Date().getFullYear()} Berkshire Desk</p>
+        <p>© {new Date().getFullYear()} Berkshire Desk. Unofficial. Not Berkshire Hathaway Inc.</p>
       </footer>
       <MethodologyDialog />
     </div>
@@ -140,7 +145,7 @@ function downloadSnapshot(v: Valuation, snap: { thirteenF?: unknown; tenQ?: unkn
   const snapshot = {
     generatedAt: new Date().toISOString(),
     methodology:
-      "Two-column SOTP: live public equities + I&O cash + other investments + capitalized ops + insurance underwriting franchise − parent bonds",
+      "Unofficial two-column SOTP estimate only — not investment advice, not affiliated with Berkshire Hathaway Inc. Investments at market + capitalized ops + insurance franchise − parent bonds. See berkshiredesk.com/legal.",
     multiple: v.multiple,
     insuranceMultiple: v.insuranceMultiple,
     mode: v.mode,

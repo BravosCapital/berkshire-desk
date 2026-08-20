@@ -26,6 +26,10 @@ const jsonLd = {
   alternateName: ["BRK Desk", "Berkshire Intrinsic Value Tracker"],
   url: siteOrigin,
   description: DESCRIPTION,
+  disambiguatingDescription:
+    "Independent unofficial research tool. Not affiliated with, endorsed by, or sponsored by Berkshire Hathaway Inc. Not investment advice.",
+  creator: { "@type": "Organization", name: APP_NAME },
+  publisher: { "@type": "Organization", name: APP_NAME },
   applicationCategory: "FinanceApplication",
   operatingSystem: "Any",
   browserRequirements: "Requires JavaScript",

@@ -79,7 +79,7 @@ export function HeroPanel({ v }: { v: Valuation }) {
   return (
     <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-kicker font-medium uppercase text-faint">Owner’s estimate · BRK.B</p>
+        <p className="text-kicker font-medium uppercase text-faint">Unofficial estimate · BRK.B</p>
         <Hint label="Two-column estimate: investments at market (cash, public equities, bonds, preferreds) plus capitalized after-interest operating earnings plus an insurance underwriting franchise, minus parent-level bonds only. Float, deferred tax, and railroad/utility debt are not deducted — they already fund or sit inside the columns above.">
           <button type="button" className="text-faint hover:text-muted" aria-label="What is intrinsic value">
             <Info className="size-3.5" />
@@ -96,7 +96,7 @@ export function HeroPanel({ v }: { v: Valuation }) {
             className="font-mono text-display font-medium tabular tracking-tight text-fg"
           />
           <p className="mt-1 text-sm text-muted">
-            Intrinsic value per Class B share
+            Estimated intrinsic value per Class B share
           </p>
 
           <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">

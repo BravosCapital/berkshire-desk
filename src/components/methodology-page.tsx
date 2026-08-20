@@ -5,37 +5,37 @@ import { ExternalLink } from "lucide-react";
 const LETTERS = [
   {
     year: "Owner’s Manual",
-    title: "Intrinsic value defined",
+    title: "Intrinsic value, as Berkshire describes it",
     takeaway:
-      "Intrinsic value is the discounted value of the cash that can be taken out of a business during its remaining life. It is the only logical approach to evaluating the relative attractiveness of investments and businesses.",
+      "Berkshire’s Owner’s Manual describes the worth of a business as the cash it can distribute over its remaining life, discounted. That idea is the starting point for this unofficial model. The wording here is our paraphrase — read the original.",
     href: "https://www.berkshirehathaway.com/ownman.pdf",
   },
   {
-    year: "1990s–2010s",
-    title: "The two-column approach",
+    year: "Shareholder letters",
+    title: "Two columns, not one pile of assets",
     takeaway:
-      "Berkshire can be thought of as two parts: a pile of investments (stocks, bonds, cash) and a collection of operating businesses. Column one is marked at market. Column two is the equity value of the wholly-owned companies, best estimated by capitalizing after-interest earnings.",
+      "The letters describe Berkshire as two parts: investments marked at market, and wholly-owned operating businesses whose equity value is estimated from after-interest earnings. This desk follows that split. Our summary, not a quotation.",
     href: "https://www.berkshirehathaway.com/letters/letters.html",
   },
   {
-    year: "Multiple letters",
-    title: "Float is not a conventional liability",
+    year: "Shareholder letters",
+    title: "How this desk treats float",
     takeaway:
-      "Insurance float appears as a liability on the balance sheet. When underwriting is profitable (or break-even), that float is cost-free or better — revolving capital that can be invested for shareholders. Deducting it in full from intrinsic value double-counts the capital structure.",
+      "Insurance float is a balance-sheet liability. When underwriting is profitable, Berkshire has described that float as cheap revolving capital. This model therefore does not deduct float as if it were ordinary debt. That is our modelling choice, explained against the letters — not Berkshire’s official valuation of itself.",
     href: "https://www.berkshirehathaway.com/letters/letters.html",
   },
   {
-    year: "2018–2024",
-    title: "Operating earnings over GAAP noise",
+    year: "Shareholder letters",
+    title: "Operating earnings, not GAAP noise",
     takeaway:
-      "Mark-to-market swings in the equity portfolio create large, volatile GAAP earnings. Buffett has repeatedly asked shareholders to focus on operating earnings — the real economic progress of the businesses — and to ignore the accounting volatility of unrealized gains and losses.",
+      "GAAP earnings swing with unrealized gains and losses on the stock portfolio. The letters ask readers to look at operating earnings instead. This desk capitalizes operating earnings, not mark-to-market GAAP. Paraphrase only — see the letters.",
     href: "https://www.berkshirehathaway.com/letters/2024ltr.pdf",
   },
   {
-    year: "Ongoing",
-    title: "Capital allocation and ownership",
+    year: "Shareholder letters",
+    title: "Per-share value and buybacks",
     takeaway:
-      "The long-term goal is to maximize the average annual rate of gain in intrinsic business value on a per-share basis. Share repurchases only make sense when the stock trades below a conservative estimate of intrinsic value. The preferred holding period is forever.",
+      "Berkshire has described its aim as growing per-share intrinsic value, and has said buybacks make sense only below a conservative estimate of that value. That is Berkshire’s stated policy, not a buy or sell recommendation from this desk.",
     href: "https://www.berkshirehathaway.com/letters/letters.html",
   },
 ] as const;
@@ -43,23 +43,23 @@ const LETTERS = [
 const FAQS = [
   {
     q: "What is Berkshire Desk?",
-    a: "Berkshire Desk is an independent two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). It applies ideas from Warren Buffett’s shareholder letters to a live owner’s view of public equities, cash, operating businesses and insurance float. It is not affiliated with Berkshire Hathaway Inc. and is not investment advice.",
+    a: "Berkshire Desk is an independent, unofficial research tool that publishes a two-column SOTP estimate for Berkshire Hathaway (BRK.A / BRK.B). It is not affiliated with, endorsed by, or sponsored by Berkshire Hathaway Inc. It is not investment advice.",
   },
   {
     q: "How is Berkshire Hathaway’s intrinsic value estimated?",
-    a: "Intrinsic value is estimated as the sum of two columns: investments at market (cash, T-bills, public equities, Japan trading houses and other holdings) plus the equity value of wholly-owned operating businesses (capitalized pretax earnings) and the insurance underwriting franchise, less parent-level bonds only.",
+    a: "This desk’s estimate is the sum of two columns: investments at market plus a capitalized estimate of wholly-owned operating businesses and the insurance underwriting franchise, less parent-level bonds only. The result is an estimate, not a fact and not Berkshire’s own figure.",
   },
   {
     q: "Why isn’t insurance float deducted from intrinsic value?",
-    a: "Insurance float appears as a liability on the balance sheet. When underwriting is profitable or break-even, that float is cost-free or better — revolving capital that can be invested for shareholders. Deducting it in full from intrinsic value double-counts the capital structure. Float and deferred tax already fund or sit inside the two columns.",
+    a: "This model does not deduct float as ordinary debt, because when underwriting is profitable the letters describe float as cheap revolving capital. That is a modelling choice. It is not a statement of how Berkshire officially values itself.",
   },
   {
     q: "Should I look at GAAP earnings or operating earnings?",
-    a: "Mark-to-market swings in the equity portfolio create large, volatile GAAP earnings. Buffett has repeatedly asked shareholders to focus on operating earnings — the real economic progress of the businesses — and to ignore the accounting volatility of unrealized gains and losses.",
+    a: "This desk capitalizes operating earnings rather than GAAP earnings, because mark-to-market swings on the equity portfolio can dominate the latter. That is a modelling choice, not advice about what you should buy or sell.",
   },
   {
     q: "Where can I read Warren Buffett’s shareholder letters?",
-    a: "Every annual letter from 1977 onward, plus the Owner’s Manual, is published on Berkshire Hathaway’s website. The letters remain the primary source; this desk is a living application of those ideas.",
+    a: "On Berkshire Hathaway’s own website. This desk paraphrases ideas from those public letters and links to them. It does not reproduce the letters. They remain the primary source.",
   },
 ] as const;
 
@@ -90,8 +90,9 @@ export function MethodologyPage() {
             Letters & Lessons
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted">
-            This desk is a living application of ideas Warren Buffett has written about for decades.
-            The model is independent and imperfect. The letters remain the primary source.
+            This desk is an independent, unofficial application of ideas discussed in Berkshire’s
+            public shareholder letters. The model is imperfect. The letters on Berkshire’s own
+            site remain the primary source. Nothing here is a quotation of those letters.
           </p>
         </div>
 
@@ -114,8 +115,12 @@ export function MethodologyPage() {
 
         <section className="space-y-6">
           <h2 className="font-display text-xl font-medium tracking-tight">
-            Key takeaways from the letters
+            Key takeaways (our paraphrases)
           </h2>
+          <p className="text-sm leading-relaxed text-muted">
+            These are unofficial summaries for commentary. They are not quotations. Copyright in
+            the letters belongs to Berkshire Hathaway Inc. — follow the link and read the original.
+          </p>
           <div className="space-y-5">
             {LETTERS.map((item) => (
               <article
@@ -211,9 +216,15 @@ export function MethodologyPage() {
         <section className="space-y-3 text-sm leading-relaxed text-muted">
           <h2 className="font-display text-xl font-medium text-fg">Disclaimer</h2>
           <p>
-            This is an independent research desk. It is not affiliated with Berkshire Hathaway Inc.,
-            not investment advice, and not an offer to buy or sell securities. Intrinsic value is an
-            estimate. The letters are the authoritative source. Do your own work.
+            This is an independent, unofficial research desk. It is not affiliated with, endorsed
+            by, or sponsored by Berkshire Hathaway Inc. It is not investment advice, not a
+            recommendation, and not an offer to buy or sell securities. Intrinsic-value figures are
+            estimates. The letters are the authoritative source. Do your own work. Full notice on
+            the{" "}
+            <Link to="/legal" className="text-fg underline-offset-2 hover:underline">
+              Legal
+            </Link>{" "}
+            page.
           </p>
           <p>
             Technical sources and filing status live on the{" "}

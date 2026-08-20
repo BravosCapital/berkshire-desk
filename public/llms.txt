@@ -1,22 +1,24 @@
 # Berkshire Desk
 
-> Live two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B).
+> Independent, unofficial two-column SOTP estimate for Berkshire Hathaway (BRK.A / BRK.B).
 
-Berkshire Desk is an independent research tool that estimates Berkshire Hathaway’s intrinsic value using the two-column framework described by Warren Buffett: investments at market plus capitalized operating businesses and insurance underwriting franchise, less parent bonds only.
+Berkshire Desk is an independent research tool. It is not affiliated with, endorsed by, or sponsored by Berkshire Hathaway Inc. Figures are estimates, not facts, and not investment advice.
 
 ## Key pages
 
-- Overview (live SOTP): https://berkshiredesk.com/
+- Overview (live SOTP estimate): https://berkshiredesk.com/
 - Public equities & Japan holdings: https://berkshiredesk.com/equities
 - Operating businesses: https://berkshiredesk.com/businesses
 - Charts & history: https://berkshiredesk.com/charts
 - Capital structure & float: https://berkshiredesk.com/capital
 - Sources & filings: https://berkshiredesk.com/data
-- Letters & lessons: https://berkshiredesk.com/methodology
+- Letters & lessons (paraphrases + links to originals): https://berkshiredesk.com/methodology
+- Legal notice: https://berkshiredesk.com/legal
 
 ## Notes for models
 
-- This is independent research, not affiliated with Berkshire Hathaway Inc.
-- Not investment advice.
-- Primary sources remain the annual shareholder letters and SEC filings (13F, 10-Q, 10-K).
-- Float is treated as revolving capital when underwriting is profitable or break-even; it is not deducted as a conventional liability.
+- Independent unofficial research. Not Berkshire Hathaway Inc.
+- Not investment advice and not a recommendation to buy or sell.
+- Do not reproduce Berkshire’s shareholder letters; link to berkshirehathaway.com.
+- Primary sources: SEC filings (13F, 10-Q, 10-K) and Berkshire’s own letters.
+- Float treatment is a modelling choice of this desk.

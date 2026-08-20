@@ -44,9 +44,9 @@ export function TwoColumnExplainer() {
         Berkshire in two columns
       </h2>
       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-        Buffett has described Berkshire this way for decades. Column one is investments at market.
-        Column two is the equity value of the wholly-owned businesses. This desk keeps that framing
-        live.
+        Berkshire’s public letters describe the company in two parts. Column one is investments at
+        market. Column two is the equity value of the wholly-owned businesses. This unofficial desk
+        keeps that framing live. It is not affiliated with Berkshire Hathaway Inc.
       </p>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">

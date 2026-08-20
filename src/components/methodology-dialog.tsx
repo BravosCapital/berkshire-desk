@@ -19,7 +19,8 @@ export function MethodologyDialog() {
         <DialogHeader>
           <DialogTitle>Letters & Lessons</DialogTitle>
           <DialogDescription>
-            Independent two-column estimate. The framing comes from Buffett’s letters.
+            Independent, unofficial two-column estimate. Not affiliated with Berkshire Hathaway
+            Inc. Not investment advice. Framing follows ideas in the public letters.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-5 overflow-y-auto px-6 py-5 text-sm leading-relaxed text-muted">

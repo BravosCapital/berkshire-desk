@@ -80,13 +80,14 @@ export function TrackerPage() {
     <AppShell>
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none">
         <div className="print:hidden">
-          <p className="text-kicker uppercase text-faint">Owner’s dashboard</p>
+          <p className="text-kicker uppercase text-faint">Independent research desk</p>
           <h1 className="mt-1 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-            Berkshire Hathaway
+            Unofficial Berkshire Hathaway estimate
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-            A live two-column estimate of intrinsic value — investments at market plus the equity
-            value of the wholly-owned businesses, less parent bonds. Float is not deducted. Press{" "}
+            A live two-column <em>estimate</em> of intrinsic value — investments at market plus the
+            equity value of the wholly-owned businesses, less parent bonds. Not affiliated with
+            Berkshire Hathaway Inc. Not investment advice. Press{" "}
             <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-kicker">M</kbd> for
             Letters & Lessons.
           </p>
@@ -99,8 +100,8 @@ export function TrackerPage() {
             {formatPct(v.premiumB)} · Printed {new Date().toISOString().slice(0, 10)}
           </p>
           <p className="mt-1 text-xs text-muted">
-            Two-column SOTP · {multiple}× pretax ops · {insuranceMultiple}× underwriting · parent
-            bonds deducted · float not deducted
+            Unofficial two-column SOTP estimate · {multiple}× pretax ops · {insuranceMultiple}×
+            underwriting · parent bonds deducted · float not deducted · not investment advice
           </p>
         </div>
 

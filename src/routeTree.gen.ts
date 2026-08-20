@@ -15,6 +15,7 @@ import { Route as CapitalRouteImport } from './routes/capital'
 import { Route as ChartsRouteImport } from './routes/charts'
 import { Route as DataRouteImport } from './routes/data'
 import { Route as EquitiesRouteImport } from './routes/equities'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MethodologyRouteImport } from './routes/methodology'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
@@ -49,6 +50,11 @@ const EquitiesRoute = EquitiesRouteImport.update({
   path: '/equities',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/charts': typeof ChartsRoute
   '/data': typeof DataRoute
   '/equities': typeof EquitiesRoute
+  '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/methodology': typeof MethodologyRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/charts': typeof ChartsRoute
   '/data': typeof DataRoute
   '/equities': typeof EquitiesRoute
+  '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/methodology': typeof MethodologyRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/charts': typeof ChartsRoute
   '/data': typeof DataRoute
   '/equities': typeof EquitiesRoute
+  '/legal': typeof LegalRoute
   '/login': typeof LoginRoute
   '/methodology': typeof MethodologyRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/charts'
     | '/data'
     | '/equities'
+    | '/legal'
     | '/login'
     | '/methodology'
     | '/api/auth/$'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/charts'
     | '/data'
     | '/equities'
+    | '/legal'
     | '/login'
     | '/methodology'
     | '/api/auth/$'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/charts'
     | '/data'
     | '/equities'
+    | '/legal'
     | '/login'
     | '/methodology'
     | '/api/auth/$'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   ChartsRoute: typeof ChartsRoute
   DataRoute: typeof DataRoute
   EquitiesRoute: typeof EquitiesRoute
+  LegalRoute: typeof LegalRoute
   LoginRoute: typeof LoginRoute
   MethodologyRoute: typeof MethodologyRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
@@ -191,6 +204,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EquitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChartsRoute: ChartsRoute,
   DataRoute: DataRoute,
   EquitiesRoute: EquitiesRoute,
+  LegalRoute: LegalRoute,
   LoginRoute: LoginRoute,
   MethodologyRoute: MethodologyRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
