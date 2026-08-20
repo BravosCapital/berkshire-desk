@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { AnimatedNumber } from "@/components/animated-number";
 import { Badge } from "@/components/ui/badge";
 import { Hint } from "@/components/ui/tooltip";
 import type { Valuation } from "@/lib/valuation/compute";
-import { formatPerA, formatPerB, formatPct } from "@/lib/valuation/format";
+import { computeImpliedMultiple } from "@/lib/valuation/scenarios";
+import { formatMultiple, formatPerA, formatPerB, formatPct } from "@/lib/valuation/format";
 import { Info } from "lucide-react";
 
 function Gauge({ premium }: { premium: number }) {
@@ -72,12 +74,13 @@ export function HeroPanel({ v }: { v: Valuation }) {
   const tone = premium <= 0 ? "gain" : premium < 0.1 ? "warn" : "loss";
   const label = premium <= 0 ? "trading below estimate" : "trading above estimate";
   const pxChg = v.prevPriceB ? (v.priceB - v.prevPriceB) / v.prevPriceB : 0;
+  const implied = useMemo(() => computeImpliedMultiple(v), [v]);
 
   return (
     <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-7">
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-kicker font-medium uppercase text-faint">Intrinsic value · BRK.B</p>
-        <Hint label="Two-column estimate: investments at market (cash, public equities, bonds, preferreds) plus capitalized after-interest operating earnings plus an insurance underwriting franchise, minus parent-level bonds. We do not subtract insurance float, deferred tax, or railroad/utility debt — those were double-counted in the old model.">
+        <p className="text-kicker font-medium uppercase text-faint">Owner’s estimate · BRK.B</p>
+        <Hint label="Two-column estimate: investments at market (cash, public equities, bonds, preferreds) plus capitalized after-interest operating earnings plus an insurance underwriting franchise, minus parent-level bonds. Float, deferred tax, and railroad/utility debt are not deducted — they were double-counted in the old model.">
           <button type="button" className="text-faint hover:text-muted" aria-label="What is intrinsic value">
             <Info className="size-3.5" />
           </button>
@@ -92,7 +95,11 @@ export function HeroPanel({ v }: { v: Valuation }) {
             format={formatPerB}
             className="font-mono text-display font-medium tabular tracking-tight text-fg"
           />
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+          <p className="mt-1 text-sm text-muted">
+            Intrinsic value per Class B share
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2">
             <div>
               <p className="text-kicker uppercase text-faint">Market · BRK.B</p>
               <p className="font-mono text-lg tabular">
@@ -109,12 +116,24 @@ export function HeroPanel({ v }: { v: Valuation }) {
               <p className="font-mono text-lg tabular">{formatPerA(v.priceA)}</p>
             </div>
           </div>
+
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Badge tone={tone}>
               {formatPct(premium)} {premium <= 0 ? "discount" : "premium"}
             </Badge>
             <span className="text-sm text-muted">{label}</span>
           </div>
+
+          {implied.impliedMultiple !== null ? (
+            <p className="mt-3 text-xs text-muted">
+              Market is paying roughly{" "}
+              <span className="font-mono tabular text-fg">
+                {formatMultiple(implied.impliedMultiple)}
+              </span>{" "}
+              pretax for the operating businesses after stripping investments and the insurance
+              franchise. Desk default is {formatMultiple(v.multiple)}.
+            </p>
+          ) : null}
         </div>
         <div className="justify-self-center lg:justify-self-end">
           <Gauge premium={premium} />
