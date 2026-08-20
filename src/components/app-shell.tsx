@@ -40,13 +40,13 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <AppHeader onExport={exportSnapshot} pricesAt={query.data?.fetchedAt ?? null} />
       <div id="main">{children}</div>
-      <footer className="mx-auto max-w-7xl space-y-2 px-4 pb-12 pt-4 text-xs text-faint sm:px-6">
+      <footer className="mx-auto max-w-7xl space-y-2 border-t border-border px-4 pb-12 pt-6 text-xs text-faint sm:px-6">
         <p>
           Independent research desk. Not affiliated with Berkshire Hathaway Inc. Not investment
           advice. Intrinsic value is an estimate. Two-column SOTP: investments at market plus
           capitalized after-interest operating earnings plus underwriting franchise, less parent
-          bonds. Float and deferred tax are not deducted. 13F share counts and 10-Q balance-sheet
-          items refresh from SEC EDGAR; prices from Yahoo Finance.
+          bonds. Float and deferred tax are not deducted. 13F and 10-Q inputs refresh from SEC
+          EDGAR; prices from Yahoo Finance with Stooq fallback.
         </p>
         <p>© {new Date().getFullYear()} Berkshire Desk</p>
       </footer>
