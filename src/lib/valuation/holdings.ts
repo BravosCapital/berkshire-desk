@@ -4,9 +4,11 @@
  * and overrides these share counts; this file is the cold-start fallback and
  * the CUSIP fallback prices. Japan ownership % is still seeded.
  *
- * fallbackPrice / fallbackPrev refreshed ~20 Aug 2026 session so a dead quote
- * feed does not leave the desk on multi-day-stale marks (e.g. DAL at $85.70).
+ * FALLBACK_AS_OF must be bumped whenever fallbackPrice / fallbackPrev are
+ * refreshed. UI surfaces this date when the live feed is down.
  */
+
+export const FALLBACK_AS_OF = "2026-08-20";
 
 export type HoldingSource = "13F" | "Japan" | "Warrant";
 
@@ -68,12 +70,6 @@ export const US_HOLDINGS: UsHolding[] = [
   { ticker: "DHI", yahoo: "DHI", name: "D.R. Horton", shares: 3_564, sector: "Housing", source: "13F", reportedValue: 581_000, fallbackPrice: 148.99, fallbackPrev: 151.86 },
 ];
 
-/**
- * Japanese sogo shosha. Not in the 13F (non-US). Share counts derived from
- * the latest ownership-percentage disclosures × shares outstanding.
- * Mitsubishi 11.06% (Apr 30 2026); Mitsui 10.83% / Marubeni 10.32% (Jul 2026);
- * Itochu and Sumitomo ~10.2% (all five above 10% as of May 2026).
- */
 export const JAPAN_HOLDINGS: JapanHolding[] = [
   { ticker: "8058.T", yahoo: "8058.T", name: "Mitsubishi Corporation", shares: 445_000_000, ownershipPct: 11.06, ownershipAsOf: "2026-04-30", source: "Japan", fallbackPrice: 4696, fallbackPrev: 4778 },
   { ticker: "8031.T", yahoo: "8031.T", name: "Mitsui & Co.", shares: 310_100_000, ownershipPct: 10.83, ownershipAsOf: "2026-07-01", source: "Japan", fallbackPrice: 4774, fallbackPrev: 4873 },
