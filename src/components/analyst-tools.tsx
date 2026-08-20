@@ -11,6 +11,8 @@ import { computeLookthrough } from "@/lib/valuation/lookthrough";
 import { formatBillions, formatMultiple, formatPerB, formatPct } from "@/lib/valuation/format";
 import { cn } from "@/lib/utils";
 
+const BUYBACK_PRESETS = [25, 50, 100] as const;
+
 export function AnalystTools({ v }: { v: Valuation }) {
   const cashBuybackB = useTrackerStore((s) => s.cashBuybackB);
   const setCashBuybackB = useTrackerStore((s) => s.setCashBuybackB);
@@ -36,6 +38,7 @@ export function AnalystTools({ v }: { v: Valuation }) {
 
   const spread =
     implied.impliedMultiple !== null ? implied.impliedMultiple - v.multiple : null;
+  const idle = cashBuybackB === 0 && cashEquitiesB === 0;
 
   return (
     <div className="space-y-6">
@@ -61,10 +64,7 @@ export function AnalystTools({ v }: { v: Valuation }) {
                   : `${spread > 0 ? "+" : ""}${spread.toFixed(1)}×`
               }
             />
-            <Row
-              k="Residual / IV"
-              v={formatPct(implied.residualShareOfIv)}
-            />
+            <Row k="Residual / IV" v={formatPct(implied.residualShareOfIv)} />
           </dl>
 
           {implied.impliedMultiple !== null ? (
@@ -115,9 +115,56 @@ export function AnalystTools({ v }: { v: Valuation }) {
       <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
         <h2 className="font-display text-lg font-medium tracking-tight">Cash deployment</h2>
         <p className="mt-1 text-sm text-muted">
-          Buybacks retire B-equivalent shares at the live BRK.B price. Equity purchases swap cash
-          for stocks inside column one.
+          Model a use of the cash pile. Buybacks retire B-equivalent shares at the live BRK.B
+          price. Equity purchases swap cash for stocks inside column one. Illustration only — not a
+          recommendation.
         </p>
+
+        {idle ? (
+          <p className="mt-3 rounded-lg border border-dashed border-border bg-surface-2/50 px-3 py-2.5 text-sm text-muted">
+            Sliders start at zero. Pick a preset or drag to see IV per B and the residual cash.
+          </p>
+        ) : null}
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="text-kicker uppercase text-faint">Buyback presets</span>
+          {BUYBACK_PRESETS.map((n) => {
+            const capped = Math.min(n, Math.floor(cashMaxB));
+            if (capped <= 0) return null;
+            const active = cashBuybackB === capped && cashEquitiesB === 0;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => {
+                  setCashBuybackB(capped);
+                  setCashEquitiesB(0);
+                }}
+                className={cn(
+                  "rounded-md px-3 py-1.5 text-sm transition-colors",
+                  active
+                    ? "bg-surface-2 font-medium text-fg shadow-[var(--shadow-border)]"
+                    : "text-muted hover:bg-surface-2/70 hover:text-fg",
+                )}
+              >
+                ${capped}B buybacks
+              </button>
+            );
+          })}
+          {!idle ? (
+            <button
+              type="button"
+              onClick={() => {
+                setCashBuybackB(0);
+                setCashEquitiesB(0);
+              }}
+              className="rounded-md px-3 py-1.5 text-sm text-muted transition-colors hover:bg-surface-2/70 hover:text-fg"
+            >
+              Reset
+            </button>
+          ) : null}
+        </div>
+
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg bg-surface-2 p-4">
             <div className="flex items-baseline justify-between">
