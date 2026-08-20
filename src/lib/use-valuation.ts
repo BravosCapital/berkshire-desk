@@ -54,27 +54,32 @@ export function useLiveValuation() {
 
   const symbols = filings.data?.quoteSymbols ?? [...ALL_QUOTE_SYMBOLS];
 
+  // Daily mark book — refresh a few times a day, not every minute
   const query = useQuery({
-    queryKey: ["quotes", symbols.join(",")],
+    queryKey: ["quotes", "daily", symbols.join(",")],
     queryFn: () => fetchMarketQuotes({ data: { symbols } }),
-    refetchInterval: 60_000,
+    refetchInterval: 3 * 60 * 60_000,
+    staleTime: 2 * 60 * 60_000,
     retry: 2,
-    staleTime: 30_000,
   });
 
   const quotes = useMemo(() => mergeQuotes(query.data?.quotes), [query.data]);
-  const liveSymbols = query.data?.live ?? [];
+  const dailySymbols =
+    (query.data as { daily?: string[]; live?: string[] } | undefined)?.daily ??
+    query.data?.live ??
+    [];
 
   const quoteHealth: QuoteHealth = useMemo(
     () =>
       buildQuoteHealth({
         requested: query.data?.requested ?? symbols.length,
-        liveSymbols,
+        dailySymbols,
         source: query.data?.source,
         fetchedAt: query.data?.fetchedAt ?? null,
         failedSymbols: query.data?.failedSymbols,
+        marksAsOf: (query.data as { marksAsOf?: string } | undefined)?.marksAsOf,
       }),
-    [query.data, liveSymbols, symbols.length],
+    [query.data, dailySymbols, symbols.length],
   );
 
   const health: DeskHealth = useMemo(
@@ -87,8 +92,8 @@ export function useLiveValuation() {
     [quoteHealth, filings.data],
   );
 
-  // Valuation.live means “majority live marks including BRK.B” — not “any seed ok”.
-  const live = quoteHealth.mode === "live";
+  // Valuation.live = we have a proper daily book (not emergency seeds)
+  const live = quoteHealth.mode === "daily";
 
   const v = useMemo(
     () =>
@@ -99,10 +104,10 @@ export function useLiveValuation() {
         segmentMultiples: segment,
         insuranceMultiple,
         live,
-        liveSymbols,
+        liveSymbols: dailySymbols,
         snapshot: filings.data ?? null,
       }),
-    [quotes, multiple, mode, segment, insuranceMultiple, live, liveSymbols, filings.data],
+    [quotes, multiple, mode, segment, insuranceMultiple, live, dailySymbols, filings.data],
   );
 
   return { v, query, live, filings, quoteHealth, health };
