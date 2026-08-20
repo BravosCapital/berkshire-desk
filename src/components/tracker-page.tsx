@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { AppShell } from "@/components/app-shell";
 import { HeroPanel } from "@/components/hero-panel";
 import { BreakdownPanel } from "@/components/breakdown-panel";
@@ -6,11 +6,13 @@ import { HoldingsTable } from "@/components/holdings-table";
 import { HistoryChart } from "@/components/history-chart";
 import { AnalystTools } from "@/components/analyst-tools";
 import { TwoColumnExplainer } from "@/components/two-column-explainer";
+import { VisitDeltaStrip } from "@/components/visit-delta-strip";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { useTrackerStore } from "@/lib/store";
 import { FILING, DEFAULT_MULTIPLE, DEFAULT_INSURANCE_MULTIPLE } from "@/lib/valuation/quarterly";
 import { formatBillions, formatDateLabel, formatPerB, formatPct } from "@/lib/valuation/format";
 import { recordSnapshot } from "@/lib/valuation/snapshots";
+import { computePremiumContext } from "@/lib/valuation/premium-context";
 import { Link } from "@tanstack/react-router";
 import type { DeskSnapshot } from "@/lib/filings/types";
 import { cn } from "@/lib/utils";
@@ -57,6 +59,21 @@ export function TrackerPage() {
 
   const cashPctMkt = v.marketCap > 0 ? v.cashPreferred / v.marketCap : 0;
   const ivVsBook = v.bookEquity > 0 ? (v.intrinsicValue - v.bookEquity) / v.bookEquity : 0;
+  const cashYearsOfPretax =
+    v.pretaxRunRate > 0 ? v.cashPreferred / v.pretaxRunRate : 0;
+
+  const premiumCtx = useMemo(() => computePremiumContext(v.premiumB), [v.premiumB]);
+
+  // Rough IV lift if ~$50B of cash is used for buybacks at the live price while at a discount
+  const buybackIllustrationB = Math.min(50, v.cashPreferred / 1e9);
+  const sharesRetiredIllust = v.priceB > 0 ? (buybackIllustrationB * 1e9) / v.priceB : 0;
+  const bEqAfter = Math.max(0, v.aEquivalent - sharesRetiredIllust);
+  const ivAfterIllust =
+    bEqAfter > 0
+      ? (v.intrinsicValue - buybackIllustrationB * 1e9) / bEqAfter
+      : v.ivPerB;
+  const ivLiftPct =
+    v.ivPerB > 0 && v.premiumB < 0 ? (ivAfterIllust - v.ivPerB) / v.ivPerB : 0;
 
   return (
     <AppShell>
@@ -86,8 +103,30 @@ export function TrackerPage() {
           </p>
         </div>
 
+        <VisitDeltaStrip
+          priceB={v.priceB}
+          ivPerB={v.ivPerB}
+          cashB={v.cashPreferred / 1e9}
+          premiumPct={v.premiumB}
+          marketCapB={v.marketCap / 1e9}
+        />
+
         <TwoColumnExplainer />
         <HeroPanel v={v} />
+
+        {/* Historical premium context */}
+        <div className="rounded-xl border border-border/70 bg-surface-2/60 px-4 py-3 text-sm print:hidden">
+          <p className="text-kicker uppercase text-faint">Premium in context</p>
+          <p className="mt-1 leading-relaxed text-muted">
+            Today’s {formatPct(v.premiumB)} is {premiumCtx.label}
+            {" "}
+            <span className="text-fg">
+              (range {formatPct(premiumCtx.min)} to {formatPct(premiumCtx.max)}, median{" "}
+              {formatPct(premiumCtx.median)})
+            </span>
+            . Reconstructed quarterly series at a constant 15× / 8× policy.
+          </p>
+        </div>
 
         {/* Scenario presets */}
         <div className="flex flex-wrap items-center gap-2 print:hidden">
@@ -152,6 +191,10 @@ export function TrackerPage() {
               />
               <Row k="I&O cash" v={formatBillions(v.cashPreferred)} />
               <Row k="Cash / market" v={formatPct(cashPctMkt)} />
+              <Row
+                k="Cash / pretax ops"
+                v={cashYearsOfPretax > 0 ? `${cashYearsOfPretax.toFixed(1)} yrs` : "—"}
+              />
               <Row k="Market cap" v={formatBillions(v.marketCap)} />
               <Row k="Book equity" v={formatBillions(v.bookEquity)} />
               <Row k="IV vs book" v={formatPct(ivVsBook)} />
@@ -159,19 +202,33 @@ export function TrackerPage() {
               <Row k="Float (not deducted)" v={formatBillions(v.float)} />
             </dl>
 
-            <div className="mt-5 rounded-lg bg-surface-2 px-3 py-3 text-xs leading-relaxed text-muted">
-              {v.premiumB <= 0 ? (
-                <>
-                  Shares trade at a {formatPct(Math.abs(v.premiumB)).replace("+", "")} discount to
-                  the desk estimate. Cash alone is {formatPct(cashPctMkt).replace("+", "")} of market
-                  cap.
-                </>
-              ) : (
-                <>
-                  Shares trade at a {formatPct(v.premiumB).replace("+", "")} premium to the desk
-                  estimate. Cash is {formatPct(cashPctMkt).replace("+", "")} of market cap.
-                </>
-              )}
+            <div className="mt-5 space-y-2 rounded-lg bg-surface-2 px-3 py-3 text-xs leading-relaxed text-muted">
+              <p>
+                {v.premiumB <= 0 ? (
+                  <>
+                    Shares trade at a {formatPct(Math.abs(v.premiumB)).replace("+", "")} discount to
+                    the desk estimate. Cash alone is {formatPct(cashPctMkt).replace("+", "")} of
+                    market cap
+                    {cashYearsOfPretax > 0
+                      ? ` and covers ~${cashYearsOfPretax.toFixed(1)} years of pretax operating run-rate`
+                      : ""}
+                    .
+                  </>
+                ) : (
+                  <>
+                    Shares trade at a {formatPct(v.premiumB).replace("+", "")} premium to the desk
+                    estimate. Cash is {formatPct(cashPctMkt).replace("+", "")} of market cap.
+                  </>
+                )}
+              </p>
+              {v.premiumB < -0.02 && ivLiftPct > 0 ? (
+                <p>
+                  At this discount, deploying ~${buybackIllustrationB.toFixed(0)}B into buybacks at
+                  the live price would lift IV per B by roughly{" "}
+                  <span className="font-mono tabular text-fg">{formatPct(ivLiftPct)}</span> on the
+                  desk’s current estimate (illustration only).
+                </p>
+              ) : null}
             </div>
 
             {query.isError ? (
