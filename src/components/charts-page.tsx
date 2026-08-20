@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -18,7 +18,9 @@ import { AppShell } from "@/components/app-shell";
 import { HistoryChart } from "@/components/history-chart";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { CASH_HISTORY, IV_HISTORY, withLiveIv } from "@/lib/valuation/history";
+import { computeSensitivityGrid } from "@/lib/valuation/scenarios";
 import { formatBillions, formatPerB, formatPct } from "@/lib/valuation/format";
+import { cn } from "@/lib/utils";
 
 const TOOLTIP = {
   background: "var(--color-surface-3)",
@@ -39,6 +41,11 @@ const PIE = [
 export function ChartsPage() {
   const { v } = useLiveValuation();
   const history = withLiveIv(IV_HISTORY, v.ivPerB, v.priceB);
+  const grid = computeSensitivityGrid(v);
+
+  useEffect(() => {
+    document.title = "Charts · Berkshire Desk";
+  }, []);
 
   const allocation = [
     { name: "Public equities", value: v.publicTotal },
@@ -211,34 +218,48 @@ export function ChartsPage() {
         </div>
 
         <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
-          <h2 className="font-display text-lg font-medium tracking-tight">Sensitivity · BRK.B</h2>
+          <h2 className="font-display text-lg font-medium tracking-tight">
+            Sensitivity · earnings × multiple
+          </h2>
           <p className="text-sm text-muted">
-            Same investments and insurance franchise; only the blended operating multiple moves.
-            Market {formatPerB(v.priceB)}.
+            Shock pretax run-rate and re-capitalize. Investments and insurance held constant. Market{" "}
+            {formatPerB(v.priceB)}.
           </p>
           <div className="mt-4 overflow-x-auto">
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-kicker uppercase text-faint">
-                  <th className="py-2 font-medium">Multiple</th>
-                  <th className="py-2 font-medium">Est. IV / B</th>
-                  <th className="py-2 font-medium">vs market</th>
+                  <th className="py-2 pr-3 font-medium">Earnings</th>
+                  {[12, 15, 18].map((m) => (
+                    <th key={m} className="py-2 pr-3 font-medium text-right">
+                      {m}×
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {(
-                  [
-                    ["10× pretax", v.ivPerBAt10],
-                    ["12× pretax", v.ivPerBAt12],
-                    ["15× pretax", v.ivPerBAt15],
-                    ["18× pretax", v.ivPerBAt18],
-                    ["Current slider", v.ivPerB],
-                  ] as const
-                ).map(([label, iv]) => (
-                  <tr key={label} className="border-b border-border/60 last:border-0">
-                    <td className="py-2.5">{label}</td>
-                    <td className="py-2.5 font-mono tabular">{formatPerB(iv)}</td>
-                    <td className="py-2.5 font-mono tabular">{formatPct((v.priceB - iv) / iv)}</td>
+                {[-0.2, -0.1, 0, 0.1].map((shock) => (
+                  <tr key={shock} className="border-b border-border/60 last:border-0">
+                    <td className="py-2.5 pr-3">
+                      {shock === 0 ? "Base" : `${shock > 0 ? "+" : ""}${(shock * 100).toFixed(0)}%`}
+                    </td>
+                    {[12, 15, 18].map((m) => {
+                      const cell = grid.find((c) => c.earningsShock === shock && c.multiple === m);
+                      if (!cell) return <td key={m} />;
+                      return (
+                        <td key={m} className="py-2.5 pr-3 text-right">
+                          <div className="font-mono tabular">{formatPerB(cell.ivPerB)}</div>
+                          <div
+                            className={cn(
+                              "font-mono text-kicker tabular",
+                              cell.premium <= 0 ? "text-gain" : "text-loss",
+                            )}
+                          >
+                            {formatPct(cell.premium)}
+                          </div>
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))}
               </tbody>
