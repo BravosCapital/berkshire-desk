@@ -5,9 +5,10 @@ import { ThirteenFChanges } from "@/components/thirteenf-changes";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { formatBillions, formatDateLabel, formatPct } from "@/lib/valuation/format";
 import { FILING } from "@/lib/valuation/quarterly";
+import { quoteModeLabel } from "@/lib/data-health";
 
 export function EquitiesPage() {
-  const { v, filings } = useLiveValuation();
+  const { v, filings, quoteHealth } = useLiveValuation();
   const us = v.holdings.filter((h) => h.source === "13F");
   const top = v.holdings[0];
   const snapPeriod = filings.data?.thirteenF?.periodEnd ?? FILING.thirteenFPeriod;
@@ -25,8 +26,18 @@ export function EquitiesPage() {
           <p className="mt-2 max-w-3xl text-sm text-muted">
             Latest 13F share counts, auto-pulled from SEC EDGAR
             {snapPeriod ? ` (period ${formatDateLabel(snapPeriod)})` : ""}. Japanese sogo shosha
-            from the latest ownership disclosures. Prices are the current session. Kraft Heinz and
-            Occidental common are here, not in the equity-method residual.
+            from the latest ownership disclosures. Kraft Heinz and Occidental common are here, not
+            in the equity-method residual.
+          </p>
+          <p className="mt-2 text-sm text-muted">
+            Marks:{" "}
+            <span className="font-medium text-fg">{quoteModeLabel(quoteHealth.mode)}</span>
+            {quoteHealth.mode === "live"
+              ? ` · ${quoteHealth.liveCount}/${quoteHealth.requested} symbols`
+              : quoteHealth.mode === "partial"
+                ? ` · ${quoteHealth.liveCount}/${quoteHealth.requested} live, rest seeded as of ${quoteHealth.fallbackAsOf}`
+                : ` · table as of ${quoteHealth.fallbackAsOf} (live feed unavailable)`}
+            . Each row shows Live vs Fallback.
           </p>
         </div>
 
