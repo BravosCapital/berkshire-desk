@@ -8,6 +8,7 @@ import { useTrackerStore } from "@/lib/store";
 import { useFilingsSnapshot } from "@/lib/use-valuation";
 import { FILING } from "@/lib/valuation/quarterly";
 import { formatDateLabel } from "@/lib/valuation/format";
+import { quoteModeLabel, type QuoteHealth } from "@/lib/data-health";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -23,9 +24,11 @@ const NAV = [
 export function AppHeader({
   onExport,
   pricesAt,
+  quoteHealth,
 }: {
   onExport?: () => void;
   pricesAt: string | null;
+  quoteHealth?: QuoteHealth;
 }) {
   const { user, isPending } = useCurrentUserState();
   const setMethodologyOpen = useTrackerStore((s) => s.setMethodologyOpen);
@@ -39,9 +42,12 @@ export function AppHeader({
   const sourceLabel =
     source === "edgar" ? "EDGAR" : source === "cache" ? "Cache" : "Seed";
   const sourceTone =
-    source === "edgar" || source === "cache"
-      ? "text-gain"
-      : "text-warn";
+    source === "edgar" || source === "cache" ? "text-gain" : "text-warn";
+
+  const marksMode = quoteHealth?.mode ?? "seed";
+  const marksLabel = quoteHealth ? quoteModeLabel(marksMode) : "Marks";
+  const marksTone =
+    marksMode === "live" ? "text-gain" : marksMode === "partial" ? "text-warn" : "text-warn";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md">
@@ -77,7 +83,10 @@ export function AppHeader({
               <span className={cn("ml-1.5 font-medium", sourceTone)}>{sourceLabel}</span>
             </span>
             <span className="block">
-              10-Q {formatDateLabel(period10)}
+              <span className={cn("font-medium", marksTone)}>{marksLabel}</span>
+              {quoteHealth && quoteHealth.mode !== "live"
+                ? ` · seed ${quoteHealth.fallbackAsOf}`
+                : null}
               {pricesAt ? (
                 <>
                   {" · "}
@@ -91,10 +100,23 @@ export function AppHeader({
           </p>
           <span
             className={cn(
-              "mr-0.5 hidden rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:inline-block 2xl:hidden",
-              source === "seed"
-                ? "bg-warn-dim text-warn"
-                : "bg-gain-dim text-gain",
+              "mr-0.5 hidden rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:inline-block",
+              marksMode === "live"
+                ? "bg-gain-dim text-gain"
+                : "bg-warn-dim text-warn",
+            )}
+            title={
+              quoteHealth
+                ? `${marksLabel}: ${quoteHealth.liveCount}/${quoteHealth.requested} live`
+                : marksLabel
+            }
+          >
+            {marksMode === "live" ? "Live" : marksMode === "partial" ? "Partial" : "Seed"}
+          </span>
+          <span
+            className={cn(
+              "mr-0.5 hidden rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide 2xl:inline-block",
+              source === "seed" ? "bg-warn-dim text-warn" : "bg-gain-dim text-gain",
             )}
             title={`Filings source: ${sourceLabel}`}
           >
@@ -148,7 +170,6 @@ export function AppHeader({
         </div>
       </div>
 
-      {/* Mobile nav — larger touch targets, stronger active state */}
       <nav className="border-t border-border lg:hidden" aria-label="Sections">
         <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-2 py-2 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map((item) => (
@@ -175,9 +196,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(
         "shrink-0 rounded-md text-sm transition-colors",
-        mobile
-          ? "px-3 py-2 min-h-[40px] flex items-center"
-          : "px-2.5 py-1.5",
+        mobile ? "flex min-h-[40px] items-center px-3 py-2" : "px-2.5 py-1.5",
         active
           ? "bg-surface-2 font-medium text-fg shadow-[var(--shadow-border)]"
           : "text-muted hover:bg-surface-2/70 hover:text-fg",
