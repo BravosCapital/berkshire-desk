@@ -13,16 +13,16 @@ import appCss from "../styles.css?url";
 const APP_NAME = "Berkshire Desk";
 const DESCRIPTION =
   "Live two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). Owner’s view of public equities, cash, operating businesses, insurance float and capital structure — with analyst tools, charts and lessons from Buffett’s letters. Independent research, not investment advice.";
-const host = import.meta.env.VITE_PUBLIC_HOSTNAME;
-const ogImage = host ? `https://${host}/og.jpg` : undefined;
-const xBanner = host
-  ? `https://og.grok.me/v1/banner.png?host=${encodeURIComponent(host)}&title=${encodeURIComponent(APP_NAME)}&color=08090B`
-  : undefined;
+const host = import.meta.env.VITE_PUBLIC_HOSTNAME || "berkshiredesk.com";
+const siteOrigin = `https://${host}`;
+const ogImage = `${siteOrigin}/og.jpg`;
+const xBanner = `https://og.grok.me/v1/banner.png?host=${encodeURIComponent(host)}&title=${encodeURIComponent(APP_NAME)}&color=08090B`;
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: APP_NAME,
+  url: siteOrigin,
   description: DESCRIPTION,
   applicationCategory: "FinanceApplication",
   operatingSystem: "Any",
@@ -68,29 +68,22 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:title", content: APP_NAME },
       { property: "og:site_name", content: APP_NAME },
-      ...(ogImage
-        ? [
-            { property: "og:image", content: ogImage },
-            { property: "og:image:width", content: "1200" },
-            { property: "og:image:height", content: "630" },
-            { name: "twitter:image", content: ogImage },
-          ]
-        : []),
-      ...(xBanner
-        ? [
-            { property: "x:game:image", content: xBanner },
-            { property: "x:game:image:width", content: "1200" },
-            { property: "x:game:image:height", content: "264" },
-          ]
-        : []),
+      { property: "og:url", content: siteOrigin },
+      { property: "og:image", content: ogImage },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { name: "twitter:image", content: ogImage },
+      { property: "x:game:image", content: xBanner },
+      { property: "x:game:image:width", content: "1200" },
+      { property: "x:game:image:height", content: "264" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
-      { rel: "canonical", href: host ? `https://${host}/` : undefined },
-    ].filter((l) => l.href),
+      { rel: "canonical", href: `${siteOrigin}/` },
+    ],
   }),
   component: RootDocument,
 });
