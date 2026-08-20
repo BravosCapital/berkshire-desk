@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#08090b"/>
+  <rect x="40" y="40" width="1120" height="550" rx="24" fill="none" stroke="#23262e" stroke-width="2"/>
+  <!-- Monogram -->
+  <g transform="translate(80, 180)">
+    <rect width="180" height="180" rx="40" fill="#12141a"/>
+    <rect x="4" y="4" width="172" height="172" rx="36" fill="none" stroke="#2a2e36" stroke-width="2"/>
+    <path fill="#e8eaee" fill-rule="evenodd" d="M48 38h48c17 0 28 9 28 23 0 10-6 17-16.5 19 13.5 2 23 11.5 23 26.5 0 16-13 22.5-35.5 22.5H48v-8.5h9V46.5H48V38zm24 10.5v23.5h24c8 0 12.5-4.5 12.5-11.5S104 48.5 96 48.5H72zm0 39.5v30.5h28c10 0 15.5-6 15.5-15.5S110 78 100 78H72z"/>
+  </g>
+  <!-- Title -->
+  <text x="300" y="260" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="64" font-weight="600" fill="#e8eaee">Berkshire Desk</text>
+  <text x="300" y="320" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="28" fill="#8b919a">Live two-column intrinsic value · BRK.A / BRK.B</text>
+  <text x="300" y="380" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="22" fill="#5c6370">Owner’s view of equities, cash, operating businesses & float</text>
+  <!-- Footer line -->
+  <text x="80" y="560" font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="18" fill="#5c6370">Independent research · Not investment advice</text>
+</svg>
