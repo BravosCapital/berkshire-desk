@@ -1,4 +1,4 @@
-import { useCallback, useEffect, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
 import { AppHeader } from "@/components/app-header";
 import { MethodologyDialog } from "@/components/methodology-dialog";
@@ -8,10 +8,39 @@ import { useTrackerStore } from "@/lib/store";
 import type { Valuation } from "@/lib/valuation/compute";
 import { A_PER_B } from "@/lib/valuation/quarterly";
 
+const LAST_SEEN_KEY = "brk-last-seen-filings";
+
+type LastSeen = {
+  thirteenFFiled?: string;
+  tenQFiled?: string;
+  source?: string;
+};
+
+function readLastSeen(): LastSeen {
+  try {
+    const raw = localStorage.getItem(LAST_SEEN_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw) as LastSeen;
+  } catch {
+    return {};
+  }
+}
+
+function writeLastSeen(next: LastSeen) {
+  try {
+    localStorage.setItem(LAST_SEEN_KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { v, query, filings } = useLiveValuation();
   const setMethodologyOpen = useTrackerStore((s) => s.setMethodologyOpen);
+  const prevSource = useRef<string | null>(null);
+  const hydrated = useRef(false);
 
+  // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement | null)?.tagName;
@@ -29,6 +58,57 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [setMethodologyOpen]);
 
+  // Filing ping: toast when we leave seed, or when a newer filing appears
+  useEffect(() => {
+    const snap = filings.data;
+    if (!snap) return;
+
+    const source = snap.source ?? "seed";
+    const filed13 = snap.thirteenF?.filed;
+    const filed10 = snap.tenQ?.filed;
+
+    // First paint — just record, don't toast
+    if (!hydrated.current) {
+      hydrated.current = true;
+      prevSource.current = source;
+      const last = readLastSeen();
+      writeLastSeen({
+        thirteenFFiled: filed13 ?? last.thirteenFFiled,
+        tenQFiled: filed10 ?? last.tenQFiled,
+        source,
+      });
+      return;
+    }
+
+    // Seed → live/cache
+    if (prevSource.current === "seed" && (source === "edgar" || source === "cache")) {
+      toast("EDGAR filings loaded", {
+        description: "13F and 10-Q figures are now live.",
+      });
+    }
+
+    // Newer filing than last seen in this browser
+    const last = readLastSeen();
+    const newer13 = filed13 && last.thirteenFFiled && filed13 > last.thirteenFFiled;
+    const newer10 = filed10 && last.tenQFiled && filed10 > last.tenQFiled;
+
+    if (newer13 || newer10) {
+      const parts: string[] = [];
+      if (newer13) parts.push(`13F ${filed13}`);
+      if (newer10) parts.push(`10-Q ${filed10}`);
+      toast("New filing detected", {
+        description: parts.join(" · "),
+      });
+    }
+
+    prevSource.current = source;
+    writeLastSeen({
+      thirteenFFiled: filed13 ?? last.thirteenFFiled,
+      tenQFiled: filed10 ?? last.tenQFiled,
+      source,
+    });
+  }, [filings.data]);
+
   const exportSnapshot = useCallback(() => {
     downloadSnapshot(v, filings.data ?? null);
     toast("Snapshot exported", { description: "JSON and CSV downloaded." });
@@ -45,10 +125,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <KeyboardHints />
         <p>
           Independent research desk. Not affiliated with Berkshire Hathaway Inc. Not investment
-          advice. Intrinsic value is an estimate. Two-column SOTP: investments at market plus
-          capitalized after-interest operating earnings plus underwriting franchise, less parent
-          bonds. Float and deferred tax are not deducted. 13F and 10-Q inputs refresh from SEC
-          EDGAR; prices from Yahoo Finance with Stooq fallback.
+          advice. Intrinsic value is an estimate built on the two-column framing from the letters.
+          Float and deferred tax are not deducted. 13F and 10-Q inputs refresh from SEC EDGAR;
+          prices from Yahoo Finance with Stooq fallback.
         </p>
         <p>© {new Date().getFullYear()} Berkshire Desk</p>
       </footer>
