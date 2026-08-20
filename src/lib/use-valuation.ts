@@ -7,6 +7,12 @@ import { FILING } from "@/lib/valuation/quarterly";
 import { useTrackerStore } from "@/lib/store";
 import { computeValuation, type Quote } from "@/lib/valuation/compute";
 import { ALL_QUOTE_SYMBOLS, FALLBACK_QUOTES } from "@/lib/valuation/holdings";
+import {
+  buildDeskHealth,
+  buildQuoteHealth,
+  type DeskHealth,
+  type QuoteHealth,
+} from "@/lib/data-health";
 
 const PLACEHOLDER_FILINGS = seedSnapshot();
 PLACEHOLDER_FILINGS.refreshedAt = `${FILING.periodEnd}T00:00:00.000Z`;
@@ -52,11 +58,38 @@ export function useLiveValuation() {
     queryKey: ["quotes", symbols.join(",")],
     queryFn: () => fetchMarketQuotes({ data: { symbols } }),
     refetchInterval: 60_000,
+    retry: 2,
+    staleTime: 30_000,
   });
 
   const quotes = useMemo(() => mergeQuotes(query.data?.quotes), [query.data]);
   const liveSymbols = query.data?.live ?? [];
-  const live = liveSymbols.includes("BRK-B");
+
+  const quoteHealth: QuoteHealth = useMemo(
+    () =>
+      buildQuoteHealth({
+        requested: query.data?.requested ?? symbols.length,
+        liveSymbols,
+        source: query.data?.source,
+        fetchedAt: query.data?.fetchedAt ?? null,
+        failedSymbols: query.data?.failedSymbols,
+      }),
+    [query.data, liveSymbols, symbols.length],
+  );
+
+  const health: DeskHealth = useMemo(
+    () =>
+      buildDeskHealth(quoteHealth, {
+        source: filings.data?.source ?? "seed",
+        stale: Boolean(filings.data?.stale),
+        error: filings.data?.error,
+      }),
+    [quoteHealth, filings.data],
+  );
+
+  // Valuation.live means “majority live marks including BRK.B” — not “any seed ok”.
+  const live = quoteHealth.mode === "live";
+
   const v = useMemo(
     () =>
       computeValuation({
@@ -72,5 +105,5 @@ export function useLiveValuation() {
     [quotes, multiple, mode, segment, insuranceMultiple, live, liveSymbols, filings.data],
   );
 
-  return { v, query, live, filings };
+  return { v, query, live, filings, quoteHealth, health };
 }
