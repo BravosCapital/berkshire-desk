@@ -47,7 +47,7 @@ export function AppHeader({
   const marksMode = quoteHealth?.mode ?? "seed";
   const marksLabel = quoteHealth ? quoteModeLabel(marksMode) : "Marks";
   const marksTone =
-    marksMode === "live" ? "text-gain" : marksMode === "partial" ? "text-warn" : "text-warn";
+    marksMode === "daily" ? "text-gain" : marksMode === "partial" ? "text-warn" : "text-warn";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md">
@@ -84,34 +84,27 @@ export function AppHeader({
             </span>
             <span className="block">
               <span className={cn("font-medium", marksTone)}>{marksLabel}</span>
-              {quoteHealth && quoteHealth.mode !== "live"
-                ? ` · seed ${quoteHealth.fallbackAsOf}`
+              {quoteHealth
+                ? marksMode === "daily"
+                  ? ` · ${quoteHealth.marksAsOf}`
+                  : ` · seed ${quoteHealth.fallbackAsOf}`
                 : null}
-              {pricesAt ? (
-                <>
-                  {" · "}
-                  {new Date(pricesAt).toLocaleTimeString("en-GB", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </>
-              ) : null}
             </span>
           </p>
           <span
             className={cn(
               "mr-0.5 hidden rounded-full px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide sm:inline-block",
-              marksMode === "live"
-                ? "bg-gain-dim text-gain"
-                : "bg-warn-dim text-warn",
+              marksMode === "daily" ? "bg-gain-dim text-gain" : "bg-warn-dim text-warn",
             )}
             title={
               quoteHealth
-                ? `${marksLabel}: ${quoteHealth.liveCount}/${quoteHealth.requested} live`
+                ? marksMode === "daily"
+                  ? `Daily session closes as of ${quoteHealth.marksAsOf}`
+                  : `${marksLabel}: ${quoteHealth.dailyCount}/${quoteHealth.requested}`
                 : marksLabel
             }
           >
-            {marksMode === "live" ? "Live" : marksMode === "partial" ? "Partial" : "Seed"}
+            {marksMode === "daily" ? "Daily" : marksMode === "partial" ? "Partial" : "Seed"}
           </span>
           <span
             className={cn(
