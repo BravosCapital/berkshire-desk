@@ -11,6 +11,7 @@ import { useTrackerStore } from "@/lib/store";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Berkshire Desk";
+const DEFAULT_TITLE = "Berkshire Desk — Live Intrinsic Value for BRK.A / BRK.B";
 const DESCRIPTION =
   "Live two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). Owner’s view of public equities, cash, operating businesses, insurance float and capital structure — with analyst tools, charts and lessons from Buffett’s letters. Independent research, not investment advice.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME || "berkshiredesk.com";
@@ -22,16 +23,30 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: APP_NAME,
+  alternateName: ["BRK Desk", "Berkshire Intrinsic Value Tracker"],
   url: siteOrigin,
   description: DESCRIPTION,
   applicationCategory: "FinanceApplication",
   operatingSystem: "Any",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  browserRequirements: "Requires JavaScript",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
   about: {
     "@type": "Organization",
-    name: "Berkshire Hathaway",
+    name: "Berkshire Hathaway Inc.",
     tickerSymbol: "BRK.B",
+    sameAs: [
+      "https://www.berkshirehathaway.com/",
+      "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001067983",
+    ],
   },
+  keywords:
+    "Berkshire Hathaway, BRK.B, BRK.A, intrinsic value, SOTP, Buffett, two-column valuation, insurance float, owner earnings",
+  inLanguage: "en-US",
+  isAccessibleForFree: true,
 };
 
 function makeQueryClient() {
@@ -51,22 +66,23 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: APP_NAME },
+      { title: DEFAULT_TITLE },
       { name: "description", content: DESCRIPTION },
       {
         name: "keywords",
         content:
-          "Berkshire Hathaway, BRK.B, BRK.A, intrinsic value, SOTP, Buffett, two-column valuation, insurance float, owner earnings, Berkshire tracker",
+          "Berkshire Hathaway, BRK.B, BRK.A, intrinsic value, SOTP, Buffett, two-column valuation, insurance float, owner earnings, Berkshire tracker, Berkshire Desk",
       },
-      { name: "robots", content: "index, follow" },
+      { name: "author", content: "Berkshire Desk" },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
       { property: "og:description", content: DESCRIPTION },
       { name: "apple-mobile-web-app-title", content: APP_NAME },
       { name: "theme-color", content: "#08090b" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: APP_NAME },
+      { name: "twitter:title", content: DEFAULT_TITLE },
       { name: "twitter:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
-      { property: "og:title", content: APP_NAME },
+      { property: "og:title", content: DEFAULT_TITLE },
       { property: "og:site_name", content: APP_NAME },
       { property: "og:url", content: siteOrigin },
       { property: "og:image", content: ogImage },
