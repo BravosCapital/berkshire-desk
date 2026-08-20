@@ -19,6 +19,9 @@ type YahooChart = {
         currency?: string;
         symbol?: string;
       };
+      indicators?: {
+        quote?: Array<{ close?: Array<number | null> }>;
+      };
     }>;
     error?: unknown;
   };
@@ -26,6 +29,9 @@ type YahooChart = {
 
 const cache = new Map<string, { at: number; data: QuoteResult }>();
 const TTL_MS = 45_000;
+
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36";
 
 function toStooq(symbol: string): string | null {
   if (symbol === "BRK-A") return "brk-a.us";
@@ -36,29 +42,67 @@ function toStooq(symbol: string): string | null {
   return `${symbol.toLowerCase().replace(".", "-")}.us`;
 }
 
-async function fetchYahoo(symbol: string): Promise<QuoteResult | null> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent":
-        "Mozilla/5.0 (compatible; BerkshireDesk/1.0; +https://github.com/BravosCapital/berkshire-desk)",
-      Accept: "application/json",
-    },
-    signal: AbortSignal.timeout(8_000),
-  });
-  if (!res.ok) return null;
-  const json = (await res.json()) as YahooChart;
-  const meta = json.chart?.result?.[0]?.meta;
-  const price = meta?.regularMarketPrice;
-  if (typeof price !== "number" || !Number.isFinite(price)) return null;
-  const prev = meta?.chartPreviousClose ?? meta?.previousClose ?? price;
+function parseYahooChart(json: YahooChart, symbol: string): QuoteResult | null {
+  const result = json.chart?.result?.[0];
+  if (!result) return null;
+  const meta = result.meta;
+  const closes = (result.indicators?.quote?.[0]?.close ?? []).filter(
+    (c): c is number => typeof c === "number" && Number.isFinite(c),
+  );
+  const price =
+    typeof meta?.regularMarketPrice === "number" && Number.isFinite(meta.regularMarketPrice)
+      ? meta.regularMarketPrice
+      : closes.length
+        ? closes[closes.length - 1]
+        : null;
+  if (price === null) return null;
+
+  // Prefer the prior session close from the series — meta.chartPreviousClose is often stale.
+  let prev: number;
+  if (closes.length >= 2) {
+    prev = closes[closes.length - 2];
+    // If the last bar is still the prior session (market closed / delayed), use the bar before that.
+    if (closes.length >= 3 && Math.abs(closes[closes.length - 1] - price) < 1e-6) {
+      // last close equals live price → prev is second-to-last (already set)
+    }
+  } else {
+    prev = meta?.chartPreviousClose ?? meta?.previousClose ?? price;
+  }
+  if (typeof prev !== "number" || !Number.isFinite(prev)) prev = price;
+
   return {
     symbol,
     price,
-    prevClose: typeof prev === "number" ? prev : price,
+    prevClose: prev,
     currency: meta?.currency ?? (symbol.endsWith(".T") ? "JPY" : "USD"),
     source: "yahoo",
   };
+}
+
+async function fetchYahooHost(host: string, symbol: string): Promise<QuoteResult | null> {
+  const url = `https://${host}/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": BROWSER_UA,
+        Accept: "application/json,text/plain,*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: "https://finance.yahoo.com/",
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as YahooChart;
+    return parseYahooChart(json, symbol);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchYahoo(symbol: string): Promise<QuoteResult | null> {
+  const a = await fetchYahooHost("query1.finance.yahoo.com", symbol);
+  if (a) return a;
+  return fetchYahooHost("query2.finance.yahoo.com", symbol);
 }
 
 async function fetchStooq(symbol: string): Promise<QuoteResult | null> {
@@ -67,14 +111,18 @@ async function fetchStooq(symbol: string): Promise<QuoteResult | null> {
   const url = `https://stooq.com/q/l/?s=${encodeURIComponent(stooqSym)}&f=sd2t2ohlcv&h&e=csv`;
   try {
     const res = await fetch(url, {
-      headers: { "User-Agent": "BerkshireDesk/1.0", Accept: "text/csv,*/*" },
-      signal: AbortSignal.timeout(8_000),
+      headers: {
+        "User-Agent": BROWSER_UA,
+        Accept: "text/csv,*/*",
+      },
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return null;
     const text = await res.text();
     const lines = text.trim().split(/\r?\n/);
     if (lines.length < 2) return null;
     const cols = lines[1].split(",");
+    // s,d,t,o,h,l,c,v
     const close = Number(cols[6]);
     if (!Number.isFinite(close) || close <= 0) return null;
     const open = Number(cols[3]);
@@ -109,7 +157,8 @@ export const fetchMarketQuotes = createServerFn({ method: "POST" })
     const live: string[] = [];
     let yahooCount = 0;
     let stooqCount = 0;
-    const chunk = 6;
+    // Smaller concurrency — some hosts throttle bursty chart requests from cloud IPs.
+    const chunk = 4;
     for (let i = 0; i < symbols.length; i += chunk) {
       const slice = symbols.slice(i, i + chunk);
       const rows = await Promise.all(slice.map((s) => fetchOne(s)));
@@ -125,6 +174,10 @@ export const fetchMarketQuotes = createServerFn({ method: "POST" })
           if (fb) out[sym] = { symbol: sym, ...fb, source: "fallback" };
         }
       });
+      // Brief pause between chunks to reduce 429s from Yahoo on serverless IPs.
+      if (i + chunk < symbols.length) {
+        await new Promise((r) => setTimeout(r, 120));
+      }
     }
     const source =
       yahooCount > 0 && stooqCount > 0
