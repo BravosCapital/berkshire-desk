@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { BookOpen, FileDown, Moon, Sun } from "lucide-react";
-import { SignedIn, SignedOut, UserButton } from "@/lib/auth/gates";
+import { SignedIn, UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { Button } from "@/components/ui/button";
+import { DeskLogo } from "@/components/desk-logo";
 import { useTrackerStore } from "@/lib/store";
 import { useFilingsSnapshot } from "@/lib/use-valuation";
 import { FILING } from "@/lib/valuation/quarterly";
@@ -37,18 +38,24 @@ export function AppHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md">
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
-        <Link to="/" className="flex min-w-0 shrink-0 items-baseline gap-2.5">
-          <span className="font-display text-lg font-medium tracking-tight sm:text-xl">
-            Berkshire Desk
-          </span>
-          <span className="hidden truncate text-xs text-muted lg:inline">
-            Research for BRK.A / BRK.B
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
+        <Link
+          to="/"
+          className="flex min-w-0 shrink-0 items-center gap-2.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <DeskLogo className="size-8 shrink-0 sm:size-9" />
+          <span className="min-w-0">
+            <span className="block font-display text-base font-medium leading-tight tracking-tight sm:text-lg">
+              Berkshire Desk
+            </span>
+            <span className="hidden text-[11px] leading-none text-muted xl:block">
+              Research for BRK.A / BRK.B
+            </span>
           </span>
         </Link>
 
         <nav
-          className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto md:flex"
+          className="ml-1 hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex"
           aria-label="Primary"
         >
           {NAV.map((item) => (
@@ -56,21 +63,26 @@ export function AppHeader({
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1 sm:gap-1.5">
-          <p className="hidden text-right text-kicker leading-snug text-faint xl:block">
-            13F {formatDateLabel(filed13)}
-            <span className="mx-1.5 text-border-strong">·</span>
-            10-Q {formatDateLabel(period10)}
-            {pricesAt ? (
-              <>
-                <span className="mx-1.5 text-border-strong">·</span>
-                Prices {new Date(pricesAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
-              </>
-            ) : null}
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <p className="mr-1 hidden text-right text-[10px] leading-snug text-faint 2xl:block">
+            <span className="block">13F {formatDateLabel(filed13)}</span>
+            <span className="block">
+              10-Q {formatDateLabel(period10)}
+              {pricesAt ? (
+                <>
+                  {" · "}
+                  {new Date(pricesAt).toLocaleTimeString("en-GB", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </>
+              ) : null}
+            </span>
           </p>
           <Button
             variant="ghost"
             size="icon"
+            className="size-9"
             onClick={toggleTheme}
             aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           >
@@ -79,35 +91,44 @@ export function AppHeader({
           <Button
             variant="ghost"
             size="icon"
+            className="hidden size-9 sm:inline-flex"
             onClick={() => setMethodologyOpen(true)}
-            className="hidden sm:inline-flex"
             aria-label="Methodology"
           >
             <BookOpen />
           </Button>
           {onExport ? (
             <>
-              <Button variant="secondary" size="sm" onClick={onExport} className="hidden sm:inline-flex">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={onExport}
+                className="hidden h-9 sm:inline-flex"
+              >
                 <FileDown />
                 Export
               </Button>
-              <Button variant="ghost" size="icon" onClick={onExport} className="sm:hidden" aria-label="Export snapshot">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-9 sm:hidden"
+                onClick={onExport}
+                aria-label="Export snapshot"
+              >
                 <FileDown />
               </Button>
             </>
           ) : null}
-          {isPending ? null : user ? (
+          {!isPending && user ? (
             <SignedIn>
               <UserButton />
             </SignedIn>
           ) : null}
         </div>
       </div>
-      <nav
-        className="border-t border-border md:hidden"
-        aria-label="Sections"
-      >
-        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 py-1.5">
+
+      <nav className="border-t border-border lg:hidden" aria-label="Sections">
+        <div className="mx-auto flex max-w-7xl gap-0.5 overflow-x-auto px-2 py-1.5 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map((item) => (
             <NavLink key={item.to} item={item} active={pathname === item.to} />
           ))}
@@ -130,7 +151,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(
         "shrink-0 rounded-sm px-2.5 py-1.5 text-sm transition-colors",
-        active ? "bg-surface-2 text-fg" : "text-muted hover:bg-surface-2 hover:text-fg",
+        active ? "bg-surface-2 font-medium text-fg" : "text-muted hover:bg-surface-2 hover:text-fg",
       )}
     >
       {item.label}
