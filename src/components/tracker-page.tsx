@@ -7,6 +7,8 @@ import { HistoryChart } from "@/components/history-chart";
 import { AnalystTools } from "@/components/analyst-tools";
 import { TwoColumnExplainer } from "@/components/two-column-explainer";
 import { VisitDeltaStrip } from "@/components/visit-delta-strip";
+import { OwnerMetrics } from "@/components/owner-metrics";
+import { DeskNote } from "@/components/desk-note";
 import { useLiveValuation } from "@/lib/use-valuation";
 import { useTrackerStore } from "@/lib/store";
 import { FILING, DEFAULT_MULTIPLE, DEFAULT_INSURANCE_MULTIPLE, A_PER_B } from "@/lib/valuation/quarterly";
@@ -64,7 +66,6 @@ export function TrackerPage() {
 
   const premiumCtx = useMemo(() => computePremiumContext(v.premiumB), [v.premiumB]);
 
-  // Rough IV lift if ~$50B of cash is used for buybacks at the live price while at a discount
   const buybackIllustrationB = Math.min(50, v.cashPreferred / 1e9);
   const sharesRetiredIllust = v.priceB > 0 ? (buybackIllustrationB * 1e9) / v.priceB : 0;
   const bEquivalent = v.classA * A_PER_B + v.classB;
@@ -116,7 +117,17 @@ export function TrackerPage() {
         <TwoColumnExplainer />
         <HeroPanel v={v} />
 
-        {/* Historical premium context */}
+        <OwnerMetrics v={v} />
+
+        <DeskNote
+          holdings={v.holdings}
+          cashPreferred={v.cashPreferred}
+          thirteenFFiled={snap?.thirteenF?.filed ?? FILING.thirteenFFiled}
+          thirteenFPeriod={snap?.thirteenF?.periodEnd ?? FILING.thirteenFPeriod}
+          tenQFiled={FILING.tenQFiled}
+          tenQPeriod={snap?.tenQ?.periodEnd ?? FILING.periodEnd}
+        />
+
         <div className="rounded-xl border border-border/70 bg-surface-2/60 px-4 py-3 text-sm print:hidden">
           <p className="text-kicker uppercase text-faint">Premium in context</p>
           <p className="mt-1 leading-relaxed text-muted">
@@ -130,7 +141,6 @@ export function TrackerPage() {
           </p>
         </div>
 
-        {/* Scenario presets */}
         <div className="flex flex-wrap items-center gap-2 print:hidden">
           <span className="text-kicker uppercase text-faint">Scenario</span>
           {PRESETS.map((p) => (
