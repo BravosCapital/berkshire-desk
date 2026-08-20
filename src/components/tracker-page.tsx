@@ -15,6 +15,7 @@ import { FILING, DEFAULT_MULTIPLE, DEFAULT_INSURANCE_MULTIPLE, A_PER_B } from "@
 import { formatBillions, formatDateLabel, formatPerB, formatPct } from "@/lib/valuation/format";
 import { recordSnapshot } from "@/lib/valuation/snapshots";
 import { computePremiumContext } from "@/lib/valuation/premium-context";
+import { quoteModeLabel } from "@/lib/data-health";
 import { Link } from "@tanstack/react-router";
 import type { DeskSnapshot } from "@/lib/filings/types";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ const PRESETS = [
 ] as const;
 
 export function TrackerPage() {
-  const { v, query, filings } = useLiveValuation();
+  const { v, query, filings, quoteHealth } = useLiveValuation();
   const snap = filings.data;
   const multiple = useTrackerStore((s) => s.multiple);
   const insuranceMultiple = useTrackerStore((s) => s.insuranceMultiple);
@@ -77,6 +78,13 @@ export function TrackerPage() {
   const ivLiftPct =
     v.ivPerB > 0 && v.premiumB < 0 ? (ivAfterIllust - v.ivPerB) / v.ivPerB : 0;
 
+  const priceStatus =
+    quoteHealth.mode === "live"
+      ? `Live · ${quoteHealth.source}`
+      : quoteHealth.mode === "partial"
+        ? `Partial ${quoteHealth.liveCount}/${quoteHealth.requested} · seed ${quoteHealth.fallbackAsOf}`
+        : `Seeded · ${quoteHealth.fallbackAsOf}`;
+
   return (
     <AppShell>
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none">
@@ -102,7 +110,8 @@ export function TrackerPage() {
           </p>
           <p className="mt-1 text-xs text-muted">
             Unofficial two-column SOTP estimate · {multiple}× pretax ops · {insuranceMultiple}×
-            underwriting · parent bonds deducted · float not deducted · not investment advice
+            underwriting · parent bonds deducted · float not deducted · not investment advice ·{" "}
+            {quoteModeLabel(quoteHealth.mode)}
           </p>
         </div>
 
@@ -115,7 +124,7 @@ export function TrackerPage() {
         />
 
         <TwoColumnExplainer />
-        <HeroPanel v={v} />
+        <HeroPanel v={v} quoteHealth={quoteHealth} />
 
         <OwnerMetrics v={v} />
 
@@ -181,7 +190,11 @@ export function TrackerPage() {
           <aside className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
             <h2 className="font-display text-lg font-medium tracking-tight">Vintage</h2>
             <dl className="mt-4 space-y-3 text-sm">
-              <Row k="Public prices" v={v.live ? "Live · Yahoo / Stooq" : "Fallback marks"} />
+              <Row
+                k="Public prices"
+                v={priceStatus}
+                note={quoteHealth.mode === "live" ? "live" : "degraded"}
+              />
               <Row
                 k="13F share counts"
                 v={
@@ -243,9 +256,10 @@ export function TrackerPage() {
               ) : null}
             </div>
 
-            {query.isError ? (
+            {query.isError || quoteHealth.mode === "seed" ? (
               <p className="mt-4 text-xs text-warn">
-                Live feed unavailable. Showing last seeded prices. Refresh to retry.
+                Live feed unavailable or degraded. Using seeded prices as of{" "}
+                {quoteHealth.fallbackAsOf}. See Sources.
               </p>
             ) : null}
 
