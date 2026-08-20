@@ -55,6 +55,9 @@ export function TrackerPage() {
     (p) => p.multiple === multiple && p.insurance === insuranceMultiple,
   );
 
+  const cashPctMkt = v.marketCap > 0 ? v.cashPreferred / v.marketCap : 0;
+  const ivVsBook = v.bookEquity > 0 ? (v.intrinsicValue - v.bookEquity) / v.bookEquity : 0;
+
   return (
     <AppShell>
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8 print:max-w-none">
@@ -122,7 +125,7 @@ export function TrackerPage() {
           ))}
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid items-start gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <BreakdownPanel v={v} />
           <aside className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
             <h2 className="font-display text-lg font-medium tracking-tight">Vintage</h2>
@@ -148,17 +151,36 @@ export function TrackerPage() {
                 v={v.aEquivalent.toLocaleString("en-US", { maximumFractionDigits: 0 })}
               />
               <Row k="I&O cash" v={formatBillions(v.cashPreferred)} />
+              <Row k="Cash / market" v={formatPct(cashPctMkt)} />
               <Row k="Market cap" v={formatBillions(v.marketCap)} />
               <Row k="Book equity" v={formatBillions(v.bookEquity)} />
+              <Row k="IV vs book" v={formatPct(ivVsBook)} />
               <Row k="Premium / discount" v={formatPct(v.premiumB)} />
               <Row k="Float (not deducted)" v={formatBillions(v.float)} />
             </dl>
+
+            <div className="mt-5 rounded-lg bg-surface-2 px-3 py-3 text-xs leading-relaxed text-muted">
+              {v.premiumB <= 0 ? (
+                <>
+                  Shares trade at a {formatPct(Math.abs(v.premiumB)).replace("+", "")} discount to
+                  the desk estimate. Cash alone is {formatPct(cashPctMkt).replace("+", "")} of market
+                  cap.
+                </>
+              ) : (
+                <>
+                  Shares trade at a {formatPct(v.premiumB).replace("+", "")} premium to the desk
+                  estimate. Cash is {formatPct(cashPctMkt).replace("+", "")} of market cap.
+                </>
+              )}
+            </div>
+
             {query.isError ? (
               <p className="mt-4 text-xs text-warn">
                 Live feed unavailable. Showing last seeded prices. Refresh to retry.
               </p>
             ) : null}
-            <div className="mt-6 flex flex-wrap gap-3 text-sm print:hidden">
+
+            <div className="mt-5 flex flex-wrap gap-x-4 gap-y-2 text-sm print:hidden">
               <Link to="/businesses" className="text-fg underline-offset-2 hover:underline">
                 Private businesses →
               </Link>
