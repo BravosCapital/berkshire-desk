@@ -19,24 +19,20 @@ function toIso(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Next calendar quarter-end after the given period end. */
+/** Next calendar quarter-end strictly after the given period end. */
 export function nextQuarterEnd(periodEndIso: string): string {
-  const d = parseIso(periodEndIso);
-  const m = d.getUTCMonth(); // 0-based
-  // Quarter ends: Mar 31 (2), Jun 30 (5), Sep 30 (8), Dec 31 (11)
-  if (m < 2 || (m === 2 && d.getUTCDate() < 31)) {
-    return `${d.getUTCFullYear()}-03-31`;
+  const y = Number(periodEndIso.slice(0, 4));
+  const ends = [
+    `${y}-03-31`,
+    `${y}-06-30`,
+    `${y}-09-30`,
+    `${y}-12-31`,
+    `${y + 1}-03-31`,
+  ];
+  for (const e of ends) {
+    if (e > periodEndIso) return e;
   }
-  if (m < 5 || (m === 5 && d.getUTCDate() < 30)) {
-    return `${d.getUTCFullYear()}-06-30`;
-  }
-  if (m < 8 || (m === 8 && d.getUTCDate() < 30)) {
-    return `${d.getUTCFullYear()}-09-30`;
-  }
-  if (m < 11 || (m === 11 && d.getUTCDate() < 31)) {
-    return `${d.getUTCFullYear()}-12-31`;
-  }
-  return `${d.getUTCFullYear() + 1}-03-31`;
+  return `${y + 1}-03-31`;
 }
 
 /** ~45 calendar days after period end — typical 13F window midpoint. */
