@@ -79,10 +79,10 @@ export function TrackerPage() {
     v.ivPerB > 0 && v.premiumB < 0 ? (ivAfterIllust - v.ivPerB) / v.ivPerB : 0;
 
   const priceStatus =
-    quoteHealth.mode === "live"
-      ? `Live · ${quoteHealth.source}`
+    quoteHealth.mode === "daily"
+      ? `Daily · ${quoteHealth.marksAsOf}`
       : quoteHealth.mode === "partial"
-        ? `Partial ${quoteHealth.liveCount}/${quoteHealth.requested} · seed ${quoteHealth.fallbackAsOf}`
+        ? `Partial ${quoteHealth.dailyCount}/${quoteHealth.requested} · seed ${quoteHealth.fallbackAsOf}`
         : `Seeded · ${quoteHealth.fallbackAsOf}`;
 
   return (
@@ -94,9 +94,10 @@ export function TrackerPage() {
             Unofficial Berkshire Hathaway estimate
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
-            A live two-column <em>estimate</em> of intrinsic value — investments at market plus the
-            equity value of the wholly-owned businesses, less parent bonds. Not affiliated with
-            Berkshire Hathaway Inc. Not investment advice. Press{" "}
+            A two-column <em>estimate</em> of intrinsic value — investments at market plus the equity
+            value of the wholly-owned businesses, less parent bonds. Equity marks are daily session
+            closes, not intraday. Not affiliated with Berkshire Hathaway Inc. Not investment advice.
+            Press{" "}
             <kbd className="rounded-xs bg-surface-2 px-1.5 py-0.5 font-mono text-kicker">M</kbd> for
             Letters & Lessons.
           </p>
@@ -111,7 +112,7 @@ export function TrackerPage() {
           <p className="mt-1 text-xs text-muted">
             Unofficial two-column SOTP estimate · {multiple}× pretax ops · {insuranceMultiple}×
             underwriting · parent bonds deducted · float not deducted · not investment advice ·{" "}
-            {quoteModeLabel(quoteHealth.mode)}
+            {quoteModeLabel(quoteHealth.mode)} as of {quoteHealth.marksAsOf}
           </p>
         </div>
 
@@ -193,7 +194,7 @@ export function TrackerPage() {
               <Row
                 k="Public prices"
                 v={priceStatus}
-                note={quoteHealth.mode === "live" ? "live" : "degraded"}
+                note={quoteHealth.mode === "daily" ? "daily" : "degraded"}
               />
               <Row
                 k="13F share counts"
@@ -249,7 +250,7 @@ export function TrackerPage() {
               {v.premiumB < -0.02 && ivLiftPct > 0 ? (
                 <p>
                   At this discount, deploying ~${buybackIllustrationB.toFixed(0)}B into buybacks at
-                  the live price would lift IV per B by roughly{" "}
+                  the marked price would lift IV per B by roughly{" "}
                   <span className="font-mono tabular text-fg">{formatPct(ivLiftPct)}</span> on the
                   desk’s current estimate (illustration only).
                 </p>
@@ -258,7 +259,7 @@ export function TrackerPage() {
 
             {query.isError || quoteHealth.mode === "seed" ? (
               <p className="mt-4 text-xs text-warn">
-                Live feed unavailable or degraded. Using seeded prices as of{" "}
+                Daily mark book unavailable. Using emergency seeds as of{" "}
                 {quoteHealth.fallbackAsOf}. See Sources.
               </p>
             ) : null}
