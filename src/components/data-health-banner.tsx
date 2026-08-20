@@ -23,13 +23,21 @@ export function DataHealthBanner({ health }: { health: DeskHealth }) {
         <p className="leading-relaxed">
           <span className="font-medium text-fg">Data status · </span>
           {health.summary}
-          {q.mode !== "live" ? (
+          {q.mode === "seed" ? (
             <>
-              . Seed table dated{" "}
+              . Emergency seeds dated{" "}
               <span className="font-mono tabular text-fg">
                 {formatDateLabel(q.fallbackAsOf)}
               </span>
-              . IV and portfolio weights use these marks until the live feed recovers.
+              .
+            </>
+          ) : q.mode === "partial" ? (
+            <>
+              . Daily session target{" "}
+              <span className="font-mono tabular text-fg">
+                {formatDateLabel(q.marksAsOf)}
+              </span>
+              .
             </>
           ) : null}
         </p>
