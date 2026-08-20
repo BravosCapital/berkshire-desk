@@ -61,7 +61,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [setMethodologyOpen]);
 
-  // Filing ping
   useEffect(() => {
     const snap = filings.data;
     if (!snap) return;
@@ -109,35 +108,34 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   }, [filings.data]);
 
-  // Quote degradation toast — never silent
   useEffect(() => {
     const mode = quoteHealth.mode;
     if (prevQuoteMode.current === null) {
       prevQuoteMode.current = mode;
       if (mode === "seed") {
-        toast("Market marks are seeded", {
-          description: `Live feed unavailable. Using prices as of ${quoteHealth.fallbackAsOf}.`,
+        toast("Daily mark book unavailable", {
+          description: `Using emergency seeds as of ${quoteHealth.fallbackAsOf}.`,
         });
       }
       return;
     }
     if (prevQuoteMode.current !== "seed" && mode === "seed") {
-      toast("Live marks dropped", {
-        description: `Fell back to seeded prices as of ${quoteHealth.fallbackAsOf}.`,
+      toast("Daily marks unavailable", {
+        description: `Fell back to seeds as of ${quoteHealth.fallbackAsOf}.`,
       });
     }
-    if (prevQuoteMode.current === "seed" && mode === "live") {
-      toast("Live marks restored", {
-        description: "Yahoo / Stooq feed is back.",
+    if (prevQuoteMode.current === "seed" && mode === "daily") {
+      toast("Daily marks restored", {
+        description: `Session closes as of ${quoteHealth.marksAsOf}.`,
       });
     }
     prevQuoteMode.current = mode;
-  }, [quoteHealth.mode, quoteHealth.fallbackAsOf]);
+  }, [quoteHealth.mode, quoteHealth.fallbackAsOf, quoteHealth.marksAsOf]);
 
   const exportSnapshot = useCallback(() => {
-    downloadSnapshot(v, filings.data ?? null, quoteHealth.mode);
+    downloadSnapshot(v, filings.data ?? null, quoteHealth.mode, quoteHealth.marksAsOf);
     toast("Snapshot exported", { description: "JSON and CSV downloaded." });
-  }, [v, filings.data, quoteHealth.mode]);
+  }, [v, filings.data, quoteHealth.mode, quoteHealth.marksAsOf]);
 
   return (
     <div className="min-h-dvh bg-bg text-fg">
@@ -155,8 +153,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <KeyboardHints />
         <p>{LEGAL_FOOTER}</p>
         <p>
-          13F and 10-Q inputs refresh from SEC EDGAR; prices from Yahoo Finance with Stooq
-          fallback. Seeded marks are dated and flagged when the live feed fails.{" "}
+          13F and 10-Q from SEC EDGAR. Equity marks are a daily session-close set (not
+          intraday), refreshed a few times a day from Yahoo/Stooq. Emergency seeds are dated and
+          flagged if the daily book fails.{" "}
           <Link to="/legal" className="text-muted underline-offset-2 hover:text-fg hover:underline">
             Full legal notice
           </Link>
@@ -173,12 +172,14 @@ function downloadSnapshot(
   v: Valuation,
   snap: { thirteenF?: unknown; tenQ?: unknown } | null,
   quoteMode: string,
+  marksAsOf: string,
 ) {
   const snapshot = {
     generatedAt: new Date().toISOString(),
     quoteMode,
+    marksAsOf,
     methodology:
-      "Unofficial two-column SOTP estimate only — not investment advice, not affiliated with Berkshire Hathaway Inc. Investments at market + capitalized ops + insurance franchise − parent bonds. See berkshiredesk.com/legal.",
+      "Unofficial two-column SOTP estimate only — not investment advice, not affiliated with Berkshire Hathaway Inc. Investments at market + capitalized ops + insurance franchise − parent bonds. Daily session-close marks. See berkshiredesk.com/legal.",
     multiple: v.multiple,
     insuranceMultiple: v.insuranceMultiple,
     mode: v.mode,
@@ -222,7 +223,7 @@ function downloadSnapshot(
   };
   const json = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
   const csvLines = [
-    "ticker,name,source,shares,price,currency,value,changePct,weight,live",
+    "ticker,name,source,shares,price,currency,value,changePct,weight,daily",
     ...v.holdings.map(
       (h) =>
         `${h.ticker},"${h.name}",${h.source},${h.shares},${h.price},${h.currency},${h.value},${h.changePct},${h.weight},${h.live}`,
@@ -241,6 +242,7 @@ function downloadSnapshot(
     `market_per_b,${v.priceB}`,
     `premium,${v.premiumB}`,
     `quote_mode,${quoteMode}`,
+    `marks_as_of,${marksAsOf}`,
   ];
   const csv = new Blob([csvLines.join("\n")], { type: "text/csv" });
   const stamp = new Date().toISOString().slice(0, 10);
