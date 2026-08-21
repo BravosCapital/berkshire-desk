@@ -11,9 +11,9 @@ import { useTrackerStore } from "@/lib/store";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Berkshire Desk";
-const DEFAULT_TITLE = "Berkshire Desk — Live Intrinsic Value for BRK.A / BRK.B";
+const DEFAULT_TITLE = "Berkshire Desk — Intrinsic Value Desk for BRK.A / BRK.B";
 const DESCRIPTION =
-  "Live two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). Owner’s view of public equities, cash, operating businesses, insurance float and capital structure — with analyst tools, charts and lessons from Buffett’s letters. Independent research, not investment advice.";
+  "Two-column SOTP intrinsic value desk for Berkshire Hathaway (BRK.A / BRK.B). Owner’s view of public equities at daily session marks, cash, operating businesses, insurance float and capital structure — with analyst tools, charts and lessons from Buffett’s letters. Independent research, not investment advice.";
 const host = import.meta.env.VITE_PUBLIC_HOSTNAME || "berkshiredesk.com";
 const siteOrigin = `https://${host}`;
 const ogImage = `${siteOrigin}/og.jpg`;
@@ -94,7 +94,10 @@ export const Route = createRootRoute({
       { property: "og:image:type", content: "image/jpeg" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Berkshire Desk — live two-column intrinsic value for BRK.A / BRK.B" },
+      {
+        property: "og:image:alt",
+        content: "Berkshire Desk — two-column intrinsic value for BRK.A / BRK.B",
+      },
       { name: "twitter:image", content: ogImage },
       { name: "twitter:image:alt", content: "Berkshire Desk" },
       { property: "x:game:image", content: xBanner },
