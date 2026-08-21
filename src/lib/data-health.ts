@@ -1,8 +1,6 @@
 /**
  * Desk data-health model.
- *
  * Marks are a daily session-close set, not intraday ticks.
- * Silent multi-day seed use is a product failure — surface it.
  */
 
 import { FALLBACK_AS_OF } from "@/lib/valuation/holdings";
@@ -11,22 +9,21 @@ export type QuoteMode = "daily" | "partial" | "seed";
 
 export type QuoteHealth = {
   mode: QuoteMode;
-  /** Symbols successfully fetched from Yahoo or Stooq daily bars */
   dailyCount: number;
-  /** @deprecated alias of dailyCount for older UI */
   liveCount: number;
-  /** Symbols served from hardcoded FALLBACK_QUOTES */
   fallbackCount: number;
   requested: number;
-  /** dailyCount / requested, 0–1 */
   coverage: number;
-  source: "yahoo-chart" | "yahoo+stooq" | "stooq" | "fallback" | "unknown";
+  source:
+    | "yahoo-chart"
+    | "yahoo+stooq"
+    | "stooq"
+    | "shipped"
+    | "fallback"
+    | "unknown";
   fetchedAt: string | null;
-  /** Session date of the daily mark book (majority) */
   marksAsOf: string;
-  /** Calendar date the emergency seed table was last refreshed */
   fallbackAsOf: string;
-  /** True when BRK.B came from the daily feed */
   brkBDaily: boolean;
   failedSymbols: string[];
 };
@@ -40,7 +37,6 @@ export type FilingHealth = {
 export type DeskHealth = {
   quotes: QuoteHealth;
   filings: FilingHealth;
-  /** True when the user should see a prominent warning */
   degraded: boolean;
   summary: string;
 };
@@ -109,6 +105,8 @@ export function buildDeskHealth(
     );
   } else if (marksTooOld) {
     parts.push(`Daily marks are ${marksStaleDays} days old (${quotes.marksAsOf})`);
+  } else if (quotes.source === "shipped") {
+    // Still healthy, but note provenance if filings degraded alone
   }
   if (filings.source === "seed") {
     parts.push("Filings are seeded (EDGAR not yet applied)");
@@ -122,7 +120,7 @@ export function buildDeskHealth(
     degraded,
     summary:
       parts.join(" · ") ||
-      `Daily marks as of ${quotes.marksAsOf}`,
+      `Daily marks as of ${quotes.marksAsOf}${quotes.source === "shipped" ? " (shipped book)" : ""}`,
   };
 }
 
