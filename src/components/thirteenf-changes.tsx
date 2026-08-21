@@ -13,7 +13,9 @@ const ACTION_TONE: Record<string, string> = {
 
 export function ThirteenFChanges({ holdings }: { holdings: MarkedHolding[] }) {
   const changes = computeThirteenFChanges(holdings);
-  const material = changes.filter((c) => c.action !== "unchanged" || Math.abs(c.notionalDelta) > 50_000_000);
+  const material = changes.filter(
+    (c) => c.action !== "unchanged" || Math.abs(c.notionalDelta) > 50_000_000,
+  );
   const shown = material.slice(0, 40);
 
   const netNotional = changes.reduce((s, c) => s + c.notionalDelta, 0);
@@ -28,9 +30,9 @@ export function ThirteenFChanges({ holdings }: { holdings: MarkedHolding[] }) {
         <div>
           <h2 className="font-display text-lg font-medium tracking-tight">13F change log</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted">
-            QoQ share delta vs {PRIOR_13F_PERIOD.label} (filed {PRIOR_13F_PERIOD.filed}). Notional uses
-            the live price × share change — not period-end marks. Unchanged names under $50m are
-            hidden.
+            QoQ share delta vs {PRIOR_13F_PERIOD.label} (filed {PRIOR_13F_PERIOD.filed}). Notional
+            uses daily session marks × share change — not period-end marks. Unchanged names under
+            $50m are hidden.
           </p>
         </div>
         <div className="flex flex-wrap gap-3 text-kicker uppercase text-faint">
@@ -42,7 +44,7 @@ export function ThirteenFChanges({ holdings }: { holdings: MarkedHolding[] }) {
       </div>
 
       <p className="mt-3 font-mono text-sm tabular text-muted">
-        Net notional of share changes at live prices:{" "}
+        Net notional of share changes at daily marks:{" "}
         <span className={cn(netNotional >= 0 ? "text-gain" : "text-loss")}>
           {formatBillions(netNotional)}
         </span>
@@ -90,7 +92,11 @@ export function ThirteenFChanges({ holdings }: { holdings: MarkedHolding[] }) {
                 <td
                   className={cn(
                     "py-2.5 text-right font-mono text-xs tabular",
-                    c.notionalDelta > 0 ? "text-gain" : c.notionalDelta < 0 ? "text-loss" : "text-muted",
+                    c.notionalDelta > 0
+                      ? "text-gain"
+                      : c.notionalDelta < 0
+                        ? "text-loss"
+                        : "text-muted",
                   )}
                 >
                   {formatBillions(c.notionalDelta)}
