@@ -31,7 +31,7 @@ export function OwnerMetrics({ v }: { v: Valuation }) {
     { k: "Book / B", v: formatPerB(bookPerB), hint: "Shareholders’ equity" },
     { k: "Look-through / B", v: formatPerB(ltPerB), hint: "Annualised after-tax" },
     { k: "IV / B", v: formatPerB(v.ivPerB), hint: "Desk estimate" },
-    { k: "Market / B", v: formatPerB(v.priceB), hint: "Live mark" },
+    { k: "Market / B", v: formatPerB(v.priceB), hint: "Daily session mark" },
   ] as const;
 
   return (
