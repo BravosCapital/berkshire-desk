@@ -1,16 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
 import { FALLBACK_AS_OF, FALLBACK_QUOTES } from "@/lib/valuation/holdings";
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { SHIPPED_MARKS_AS_OF, SHIPPED_QUOTES } from "@/lib/marks/shipped-book";
 
 /**
  * Daily session-close mark book (not intraday).
  *
- * Resolution order when building a response:
- *  1. Warm in-memory book (same process, ≤6h)
+ * Resolution order:
+ *  1. Warm in-memory book (≤6h)
  *  2. Fresh Yahoo/Stooq daily bars
- *  3. Last-good book on globalThis (survives warm recycles)
- *  4. Shipped public/marks/daily.json (deployed with the site)
+ *  3. Last-good book on globalThis
+ *  4. Bundled shipped book (src/lib/marks/shipped-book.ts)
  *  5. Hardcoded FALLBACK_QUOTES (emergency seeds)
  */
 
@@ -221,54 +220,32 @@ function majorityAsOf(quotes: Record<string, QuoteResult>): string {
   return best;
 }
 
-function daysBetween(isoDate: string, now = new Date()): number {
-  const [y, m, d] = isoDate.split("-").map(Number);
-  if (!y || !m || !d) return 99;
-  const then = Date.UTC(y, m - 1, d);
-  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Math.max(0, Math.round((today - then) / 86_400_000));
-}
-
-async function loadShippedBook(): Promise<BookPayload | null> {
-  try {
-    const file = join(process.cwd(), "public", "marks", "daily.json");
-    const raw = await readFile(file, "utf8");
-    const parsed = JSON.parse(raw) as {
-      marksAsOf: string;
-      fetchedAt?: string;
-      source?: string;
-      quotes: Record<string, QuoteResult>;
-    };
-    if (!parsed?.quotes || !parsed.marksAsOf) return null;
-    // Reject if older than 10 calendar days — then emergency seeds are clearer
-    if (daysBetween(parsed.marksAsOf) > 10) return null;
-    const quotes: Record<string, QuoteResult> = {};
-    const daily: string[] = [];
-    for (const [sym, q] of Object.entries(parsed.quotes)) {
-      quotes[sym] = {
-        symbol: sym,
-        price: q.price,
-        prevClose: q.prevClose,
-        currency: q.currency,
-        source: "shipped",
-        asOf: q.asOf ?? parsed.marksAsOf,
-      };
-      daily.push(sym);
-    }
-    return {
-      quotes,
-      fetchedAt: parsed.fetchedAt ?? new Date().toISOString(),
+/** Always available — bundled into the server function. */
+function loadShippedBook(): BookPayload {
+  const quotes: Record<string, QuoteResult> = {};
+  const daily: string[] = [];
+  for (const [sym, q] of Object.entries(SHIPPED_QUOTES)) {
+    quotes[sym] = {
+      symbol: sym,
+      price: q.price,
+      prevClose: q.prevClose,
+      currency: q.currency,
       source: "shipped",
-      daily,
-      live: daily,
-      failedSymbols: [],
-      requested: daily.length,
-      fallbackAsOf: FALLBACK_AS_OF,
-      marksAsOf: parsed.marksAsOf,
+      asOf: q.asOf,
     };
-  } catch {
-    return null;
+    daily.push(sym);
   }
+  return {
+    quotes,
+    fetchedAt: new Date().toISOString(),
+    source: "shipped",
+    daily,
+    live: daily,
+    failedSymbols: [],
+    requested: daily.length,
+    fallbackAsOf: FALLBACK_AS_OF,
+    marksAsOf: SHIPPED_MARKS_AS_OF,
+  };
 }
 
 function bookFromQuotes(
@@ -278,15 +255,15 @@ function bookFromQuotes(
   failedSymbols: string[],
   yahooCount: number,
   stooqCount: number,
+  shippedCount: number,
 ): BookPayload {
-  const source =
-    yahooCount > 0 && stooqCount > 0
-      ? ("yahoo+stooq" as const)
-      : yahooCount > 0
-        ? ("yahoo-chart" as const)
-        : stooqCount > 0
-          ? ("stooq" as const)
-          : ("fallback" as const);
+  let source: BookPayload["source"];
+  if (yahooCount > 0 && stooqCount > 0) source = "yahoo+stooq";
+  else if (yahooCount > 0) source = "yahoo-chart";
+  else if (stooqCount > 0) source = "stooq";
+  else if (shippedCount > 0) source = "shipped";
+  else source = "fallback";
+
   return {
     quotes: out,
     fetchedAt: new Date().toISOString(),
@@ -305,18 +282,20 @@ function mergeShippedOntoGaps(
   out: Record<string, QuoteResult>,
   daily: string[],
   failedSymbols: string[],
-  shipped: BookPayload | null,
-) {
-  if (!shipped) return;
+  shipped: BookPayload,
+): number {
+  let n = 0;
   for (const sym of symbols) {
-    if (out[sym]?.source && out[sym].source !== "fallback") continue;
+    if (out[sym]?.source === "yahoo" || out[sym]?.source === "stooq") continue;
     const q = shipped.quotes[sym];
     if (!q) continue;
     out[sym] = { ...q, source: "shipped" };
     if (!daily.includes(sym)) daily.push(sym);
+    n += 1;
     const ix = failedSymbols.indexOf(sym);
     if (ix >= 0) failedSymbols.splice(ix, 1);
   }
+  return n;
 }
 
 export const fetchMarketQuotes = createServerFn({ method: "POST" })
@@ -340,7 +319,6 @@ export const fetchMarketQuotes = createServerFn({ method: "POST" })
       g.__brkDailyBook.payload.daily.length > symbols.length * 0.5
     ) {
       const warm = g.__brkDailyBook.payload;
-      // Re-slice to requested symbols if present
       const quotes: Record<string, QuoteResult> = {};
       const daily: string[] = [];
       for (const sym of symbols) {
@@ -368,7 +346,6 @@ export const fetchMarketQuotes = createServerFn({ method: "POST" })
     let yahooCount = 0;
     let stooqCount = 0;
 
-    // Critical names first so BRK.B / AAPL land even if later batch throttles
     const ordered = [
       ...CRITICAL.filter((s) => symbols.includes(s)),
       ...symbols.filter((s) => !CRITICAL.includes(s)),
@@ -394,8 +371,8 @@ export const fetchMarketQuotes = createServerFn({ method: "POST" })
       }
     }
 
-    const shipped = await loadShippedBook();
-    mergeShippedOntoGaps(symbols, out, daily, failedSymbols, shipped);
+    const shipped = loadShippedBook();
+    const shippedCount = mergeShippedOntoGaps(symbols, out, daily, failedSymbols, shipped);
 
     for (const sym of symbols) {
       if (!out[sym]) {
@@ -412,16 +389,16 @@ export const fetchMarketQuotes = createServerFn({ method: "POST" })
       failedSymbols,
       yahooCount,
       stooqCount,
+      shippedCount,
     );
 
-    // If the feed produced almost nothing, prefer the shipped book wholesale
-    if (yahooCount + stooqCount === 0 && shipped && shipped.daily.length > 0) {
+    // Pure feed failure → whole shipped book
+    if (yahooCount + stooqCount === 0 && shipped.daily.length > 0) {
       payload = {
         ...shipped,
         requested: symbols.length,
         failedSymbols: symbols.filter((s) => !shipped.quotes[s]),
       };
-      // Ensure every requested symbol exists
       for (const sym of symbols) {
         if (!payload.quotes[sym]) {
           const fb = seedFallback(sym);
