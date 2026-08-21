@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { AppShell } from "@/components/app-shell";
+import { EquityBookGuide } from "@/components/equity-book-guide";
 import { HoldingsTable } from "@/components/holdings-table";
 import { ThirteenFChanges } from "@/components/thirteenf-changes";
 import { useLiveValuation } from "@/lib/use-valuation";
@@ -17,6 +18,13 @@ export function EquitiesPage() {
     document.title = `Equities · Berkshire Desk`;
   }, []);
 
+  const marksLine =
+    quoteHealth.mode === "daily"
+      ? `Daily session closes as of ${quoteHealth.marksAsOf} · ${quoteHealth.dailyCount}/${quoteHealth.requested} names`
+      : quoteHealth.mode === "partial"
+        ? `Partial book · ${quoteHealth.dailyCount}/${quoteHealth.requested} daily, rest seeded (${quoteHealth.fallbackAsOf})`
+        : `Emergency seeds as of ${quoteHealth.fallbackAsOf} · daily feed unavailable`;
+
   return (
     <AppShell>
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -30,14 +38,9 @@ export function EquitiesPage() {
             in the equity-method residual.
           </p>
           <p className="mt-2 text-sm text-muted">
-            Marks:{" "}
-            <span className="font-medium text-fg">{quoteModeLabel(quoteHealth.mode)}</span>
-            {quoteHealth.mode === "live"
-              ? ` · ${quoteHealth.liveCount}/${quoteHealth.requested} symbols`
-              : quoteHealth.mode === "partial"
-                ? ` · ${quoteHealth.liveCount}/${quoteHealth.requested} live, rest seeded as of ${quoteHealth.fallbackAsOf}`
-                : ` · table as of ${quoteHealth.fallbackAsOf} (live feed unavailable)`}
-            . Each row shows Live vs Fallback.
+            Marks: <span className="font-medium text-fg">{quoteModeLabel(quoteHealth.mode)}</span>
+            {" · "}
+            {marksLine}. Each row shows Daily vs Seed.
           </p>
         </div>
 
@@ -51,6 +54,8 @@ export function EquitiesPage() {
             s={top ? `${top.ticker} · ${formatPct(top.weight).replace("+", "")}` : ""}
           />
         </div>
+
+        <EquityBookGuide />
 
         <ThirteenFChanges holdings={v.holdings} />
         <HoldingsTable holdings={v.holdings} />
