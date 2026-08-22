@@ -46,7 +46,7 @@ export const GEICO_UNDERWRITING: Array<{
   { label: "2023", premiumsEarnedM: 39_264, lossRatio: 81.0, expenseRatio: 9.7, combinedRatio: 90.7, uwPretaxM: 3_635 },
   { label: "2024", premiumsEarnedM: 42_252, lossRatio: 71.8, expenseRatio: 9.7, combinedRatio: 81.5, uwPretaxM: 7_813 },
   { label: "2025", premiumsEarnedM: 44_481, lossRatio: 72.3, expenseRatio: 12.4, combinedRatio: 84.7, uwPretaxM: 6_806 },
-  { label: "H1'26", premiumsEarnedM: 22_477, lossRatio: 75.3, expenseRatio: 14.0, combinedRatio: 89.3, uwPretaxM: 2_410, halfYear: true },
+  { label: "H1 2026", premiumsEarnedM: 22_477, lossRatio: 75.3, expenseRatio: 14.0, combinedRatio: 89.3, uwPretaxM: 2_410, halfYear: true },
 ];
 
 /** Combined ratios by 10-K reporting group. BHRG is P/C only (ex life/health, ex retroactive). */
@@ -61,7 +61,7 @@ export const GROUP_COMBINED: Array<{
   { label: "2023", geico: 90.7, primary: 92.0, bhrgPc: 84.0 },
   { label: "2024", geico: 81.5, primary: 95.4, bhrgPc: 82.9 },
   { label: "2025", geico: 84.7, primary: 95.8, bhrgPc: 84.5 },
-  { label: "H1'26", geico: 89.3, primary: 91.9, bhrgPc: null, halfYear: true },
+  { label: "H1 2026", geico: 89.3, primary: 91.9, bhrgPc: null, halfYear: true },
 ];
 
 /** Premiums earned, $ billions. BHRG is property/casualty earned (not life/health). */

@@ -188,7 +188,7 @@ export function InsurancePage() {
         <div id="ratios" className="grid scroll-mt-28 gap-6 lg:grid-cols-2">
           <ChartCard
             title="GEICO loss vs expense"
-            note="Stacked ratios to premiums earned. Combined = loss + expense. Line at 100 is break-even underwriting. H1’26 is six months, not a full year."
+            note="Stacked ratios to premiums earned. Combined = loss + expense. Line at 100 is break-even underwriting. H1 2026 is six months of GEICO, not a full year and not the whole group."
           >
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={geicoRatioBars} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -236,7 +236,7 @@ export function InsurancePage() {
 
           <ChartCard
             title="Combined ratio by group"
-            note="Under 100 = underwriting profit. BHRG is property/casualty only (ex life/health). H1’26 BHRG omitted — P/C vs life mix is not split in the 10-Q table we use."
+            note="Under 100 = underwriting profit. BHRG is property/casualty only (ex life/health). H1 2026 BHRG omitted — P/C vs life mix is not split in the 10-Q table we use."
           >
             <ResponsiveContainer width="100%" height={280}>
               <LineChart data={groupCrLines} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
@@ -336,8 +336,8 @@ export function InsurancePage() {
           </ChartCard>
 
           <ChartCard
-            title="H1 2026 earned mix"
-            note={`Six months ended June 30, 2026. BHRG here includes life/health. Total ${h1MixTotal.toFixed(1)}B earned.`}
+            title="H1 2026 premiums earned"
+            note="Premiums, not profit. Six months ended June 30, 2026, all three groups. GEICO’s $22.5B slice is the same H1 2026 row in the ledger — the $39–44B ledger rows are full calendar years for GEICO only."
           >
             <div className="relative">
               <ResponsiveContainer width="100%" height={220}>
@@ -357,7 +357,10 @@ export function InsurancePage() {
                   </Pie>
                   <Tooltip
                     contentStyle={TOOLTIP}
-                    formatter={(value, name) => [`$${Number(value ?? 0).toFixed(1)}B`, String(name)]}
+                    formatter={(value, name) => [
+                      `$${Number(value ?? 0).toFixed(1)}B premiums`,
+                      String(name),
+                    ]}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -365,7 +368,7 @@ export function InsurancePage() {
                 <p className="font-mono text-lg tabular tracking-tight text-fg">
                   ${h1MixTotal.toFixed(1)}B
                 </p>
-                <p className="text-kicker uppercase text-faint">H1 earned</p>
+                <p className="text-kicker uppercase text-faint">H1 premium</p>
               </div>
             </div>
             <ul className="mt-1 space-y-1.5 text-xs text-muted">
@@ -379,7 +382,7 @@ export function InsurancePage() {
                     {s.name}
                   </span>
                   <span className="font-mono tabular text-fg">
-                    ${s.value.toFixed(1)}B · {((s.value / h1MixTotal) * 100).toFixed(0)}%
+                    ${s.value.toFixed(1)}B · {((s.value / h1MixTotal) * 100).toFixed(0)}% of H1
                   </span>
                 </li>
               ))}
@@ -391,31 +394,42 @@ export function InsurancePage() {
           id="ledger"
           className="scroll-mt-28 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6"
         >
-          <h2 className="font-display text-lg font-medium tracking-tight">GEICO underwriting ledger</h2>
+          <h2 className="font-display text-lg font-medium tracking-tight">
+            GEICO underwriting ledger
+          </h2>
           <p className="mt-1 max-w-3xl text-sm text-muted">
-            The auto book is large enough that its loss ratio is the swing factor for Berkshire’s
-            cost of float. H1’26 is not annualized.
+            GEICO only. Premiums earned are the volume of the auto book; underwriting profit is
+            what’s left after losses and expenses (1 − combined ratio). H1 2026 is six months — do
+            not line it up against a full year. That $22.5B of GEICO premium is the large slice of
+            the mix above.
           </p>
           <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[720px] text-left text-sm">
               <thead>
                 <tr className="border-b border-border text-kicker uppercase text-faint">
                   <th className="py-2 font-medium">Period</th>
-                  <th className="py-2 text-right font-medium">Earned</th>
-                  <th className="py-2 text-right font-medium">Loss</th>
+                  <th className="py-2 text-right font-medium">Premiums earned</th>
+                  <th className="py-2 text-right font-medium">Loss ratio</th>
                   <th className="py-2 text-right font-medium">Expense</th>
                   <th className="py-2 text-right font-medium">Combined</th>
-                  <th className="py-2 text-right font-medium">UW pretax</th>
+                  <th className="py-2 text-right font-medium">UW profit</th>
                 </tr>
               </thead>
               <tbody>
                 {GEICO_UNDERWRITING.map((r) => (
-                  <tr key={r.label} className="border-b border-border/60 last:border-0">
+                  <tr
+                    key={r.label}
+                    className={`border-b border-border/60 last:border-0 ${
+                      r.halfYear ? "bg-surface-2/60" : ""
+                    }`}
+                  >
                     <td className="py-2.5">
-                      {r.label}
+                      {r.halfYear ? "H1 2026" : r.label}
                       {r.halfYear ? (
-                        <span className="ml-2 text-xs text-muted">half year</span>
-                      ) : null}
+                        <span className="ml-2 text-xs text-muted">six months</span>
+                      ) : (
+                        <span className="ml-2 text-xs text-muted">full year</span>
+                      )}
                     </td>
                     <td className="py-2.5 text-right font-mono tabular">
                       {formatBillions(r.premiumsEarnedM * 1_000_000)}
