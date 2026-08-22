@@ -15,6 +15,7 @@ const NAV = [
   { to: "/", label: "Overview" },
   { to: "/equities", label: "Equities" },
   { to: "/businesses", label: "Businesses" },
+  { to: "/insurance", label: "Insurance" },
   { to: "/charts", label: "Charts" },
   { to: "/capital", label: "Capital" },
   { to: "/data", label: "Sources" },
@@ -68,7 +69,7 @@ export function AppHeader({
         </Link>
 
         <nav
-          className="ml-1 hidden min-w-0 flex-1 items-center justify-center gap-0.5 lg:flex"
+          className="ml-1 hidden min-w-0 flex-1 items-center justify-center gap-0.5 xl:flex"
           aria-label="Primary"
         >
           {NAV.map((item) => (
@@ -163,8 +164,8 @@ export function AppHeader({
         </div>
       </div>
 
-      <nav className="border-t border-border lg:hidden" aria-label="Sections">
-        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-2 py-2 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="border-t border-border xl:hidden" aria-label="Sections">
+        <div className="mx-auto flex max-w-7xl flex-nowrap gap-1 overflow-x-auto px-2 py-2 sm:px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NAV.map((item) => (
             <NavLink key={item.to} item={item} active={pathname === item.to} mobile />
           ))}
@@ -189,7 +190,9 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       className={cn(
         "shrink-0 rounded-md text-sm transition-colors",
-        mobile ? "flex min-h-[40px] items-center px-3 py-2" : "px-2.5 py-1.5",
+        mobile
+          ? "flex min-h-[40px] items-center whitespace-nowrap px-3 py-2"
+          : "whitespace-nowrap px-2.5 py-1.5",
         active
           ? "bg-surface-2 font-medium text-fg shadow-[var(--shadow-border)]"
           : "text-muted hover:bg-surface-2/70 hover:text-fg",

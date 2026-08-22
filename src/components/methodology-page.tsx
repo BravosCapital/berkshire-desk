@@ -51,7 +51,7 @@ const FAQS = [
   },
   {
     q: "Why isn’t insurance float deducted from intrinsic value?",
-    a: "This model does not deduct float as ordinary debt, because when underwriting is profitable the letters describe float as cheap revolving capital. That is a modelling choice. It is not a statement of how Berkshire officially values itself.",
+    a: "This model does not deduct float as ordinary debt, because when underwriting is profitable the letters describe float as cheap revolving capital. That is a modelling choice. It is not a statement of how Berkshire officially values itself. The Insurance page walks through the engine.",
   },
   {
     q: "Should I look at GAAP earnings or operating earnings?",

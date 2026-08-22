@@ -62,8 +62,8 @@ export function TwoColumnExplainer() {
           <p className="text-kicker uppercase text-faint">Column two</p>
           <p className="mt-1 text-sm font-medium text-fg">Operating businesses</p>
           <p className="mt-1 text-xs leading-relaxed text-muted">
-            BNSF, BHE, Manufacturing / Service / Retailing and the insurance underwriting franchise,
-            capitalized at your multiples.
+            BNSF, BHE, Manufacturing / Service / Retailing, plus the insurance underwriting
+            franchise — the engine that funds column one.
           </p>
         </div>
       </div>

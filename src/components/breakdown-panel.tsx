@@ -18,6 +18,7 @@ import {
   MULTIPLE_MIN,
 } from "@/lib/valuation/quarterly";
 import { Info } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 const PIE_COLORS = [
   "var(--color-chart-public)",
@@ -173,7 +174,10 @@ export function BreakdownPanel({ v }: { v: Valuation }) {
             </div>
             <p className="mt-1 text-xs text-muted">
               After-tax underwriting only. Investment income is the yield on cash and stocks already in
-              column one — capitalizing it would double-count.
+              column one — capitalizing it would double-count.{" "}
+              <Link to="/insurance" className="text-fg underline-offset-2 hover:underline">
+                Insurance engine →
+              </Link>
             </p>
             <Slider
               className="mt-4"
@@ -219,8 +223,8 @@ export function BreakdownPanel({ v }: { v: Valuation }) {
 
       <p className="mt-4 text-kicker text-faint">
         Market cap is {formatPct((v.marketCap - v.intrinsicValue) / v.intrinsicValue)} versus this estimate.
-        The old model subtracted all $513B of consolidated liabilities after capitalizing after-interest
-        earnings — that double-counted railroad/utility debt, insurance float and deferred tax.
+        Subtracting all GAAP liabilities after capitalizing after-interest earnings would double-count
+        railroad/utility debt, insurance float and deferred tax.
       </p>
     </section>
   );

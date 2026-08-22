@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Hint } from "@/components/ui/tooltip";
 import { useLiveValuation } from "@/lib/use-valuation";
@@ -64,7 +65,12 @@ export function CapitalPage() {
           <h1 className="mt-1 font-display text-3xl font-medium tracking-tight">Float, debt and book</h1>
           <p className="mt-2 max-w-3xl text-sm text-muted">
             Why GAAP liabilities are the wrong number to subtract from a two-column SOTP. Only
-            parent-level bonds come off intrinsic value.
+            parent-level bonds come off intrinsic value. The insurance engine — float, underwriting
+            and why float is not deducted — lives on{" "}
+            <Link to="/insurance" className="text-fg underline-offset-2 hover:underline">
+              Insurance
+            </Link>
+            .
           </p>
         </div>
 
@@ -149,9 +155,11 @@ export function CapitalPage() {
         </section>
 
         <section className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
-          <h2 className="font-display text-lg font-medium tracking-tight">What the old model did</h2>
+          <h2 className="font-display text-lg font-medium tracking-tight">
+            Why GAAP liabilities are the wrong subtraction
+          </h2>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">
-            Gross assets minus <em>all</em> GAAP liabilities double-counted railroad and utility
+            Gross assets minus <em>all</em> GAAP liabilities would double-count railroad and utility
             debt (already inside after-interest earnings), insurance float (already funding column
             one), and deferred tax on unrealized gains. Book equity of{" "}
             {formatBillions(v.bookEquity)} is the GAAP residual. Two-column IV sits above book

@@ -9,6 +9,7 @@ Berkshire Desk is an independent research tool. It is not affiliated with, endor
 - Overview (live SOTP estimate): https://berkshiredesk.com/
 - Public equities & Japan holdings: https://berkshiredesk.com/equities
 - Operating businesses: https://berkshiredesk.com/businesses
+- Insurance engine (float & underwriting): https://berkshiredesk.com/insurance
 - Charts & history: https://berkshiredesk.com/charts
 - Capital structure & float: https://berkshiredesk.com/capital
 - Sources & filings: https://berkshiredesk.com/data

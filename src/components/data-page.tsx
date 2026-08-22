@@ -157,7 +157,13 @@ export function DataPage() {
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-muted">
               <li>Japan ownership percentages (large-shareholder reports, not quarterly)</li>
               <li>Occidental warrant terms and strike</li>
-              <li>Insurance float (no clean XBRL tag; not deducted from IV anyway)</li>
+              <li>
+                Insurance float (no clean XBRL tag; not deducted from IV —{" "}
+                <Link to="/insurance" className="text-fg underline-offset-2 hover:underline">
+                  Insurance
+                </Link>
+                )
+              </li>
               <li>Your valuation multiples (they are judgement)</li>
             </ul>
             <p className="mt-4 text-sm text-muted">

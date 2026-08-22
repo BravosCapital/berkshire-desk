@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
@@ -123,7 +124,14 @@ export function BusinessesPage() {
                   <h2 className="font-display text-xl font-medium tracking-tight">{INSURANCE_GROUP.name}</h2>
                   <Badge>Insurance</Badge>
                 </div>
-                <p className="mt-2 max-w-3xl text-sm text-muted">{INSURANCE_GROUP.description}</p>
+                <p className="mt-2 max-w-3xl text-sm text-muted">
+                  The compounding engine — float funds the investment column; only after-tax
+                  underwriting is capitalized. Full treatment on{" "}
+                  <Link to="/insurance" className="text-fg underline-offset-2 hover:underline">
+                    Insurance
+                  </Link>
+                  .
+                </p>
               </div>
               <div className="text-right">
                 <p className="font-mono text-2xl tabular">{formatBillions(v.insurance)}</p>
@@ -150,17 +158,6 @@ export function BusinessesPage() {
                 aria-label="Insurance multiple"
               />
             </div>
-            <ul className="mt-5 divide-y divide-border/70">
-              {INSURANCE_GROUP.companies.map((c) => (
-                <li key={c.name} className="flex flex-wrap items-baseline justify-between gap-2 py-2.5">
-                  <div>
-                    <p className="text-sm font-medium">{c.name}</p>
-                    <p className="text-xs text-muted">{c.role}</p>
-                  </div>
-                  {c.acquired ? <p className="font-mono text-kicker text-faint">{c.acquired}</p> : null}
-                </li>
-              ))}
-            </ul>
           </article>
         </div>
       </main>
